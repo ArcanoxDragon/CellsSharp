@@ -1,7 +1,4 @@
 ﻿namespace CellsSharp.Worksheets.Internal
 {
-    sealed class WorksheetManager : IWorksheet
-    {
-        
-    }
+	sealed class WorksheetManager : IWorksheet { }
 }

@@ -3,9 +3,9 @@
 namespace CellsSharp.Workbooks
 {
 	[PublicAPI]
-    // TODO: Documentation
-    public interface IWorkbook
-    {
-        public ISheetCollection Sheets { get; }
+	// TODO: Documentation
+	public interface IWorkbook
+	{
+		public ISheetCollection Sheets { get; }
 	}
 }

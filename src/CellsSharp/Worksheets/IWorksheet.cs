@@ -3,8 +3,5 @@
 namespace CellsSharp.Worksheets
 {
 	[PublicAPI]
-	public interface IWorksheet
-	{
-
-	}
+	public interface IWorksheet { }
 }
