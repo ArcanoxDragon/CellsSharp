@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace CellsSharp.Tests
 {
 	[TestFixture]
-	public class CellReferenceTests
+	public class CellReferenceParsingTests
 	{
 		[TestCase(null)]
 		[TestCase("")]
@@ -66,5 +66,7 @@ namespace CellsSharp.Tests
 			Assert.AreEqual(expectedEndColumn, cellRange.End.Column);
 			Assert.AreEqual(expectedEndRow, cellRange.End.Row);
 		}
+
+		// TODO: CellReference tests
 	}
 }
