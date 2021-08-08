@@ -27,6 +27,8 @@ namespace CellsSharp.Cells
 
 		public bool IsEmpty => this.ranges.Count == 0;
 
+		public IEnumerable<CellRange> Ranges => this.ranges;
+
 		#region ICellReference
 
 		/// <inheritdoc />
