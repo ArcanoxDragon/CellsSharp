@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CellsSharp", "src\CellsSharp\CellsSharp.csproj", "{00ED1C4B-230B-45BD-B809-C0059061BC33}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{33538573-1F3B-47B9-80A8-A954844DC003}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{BF24E0BD-25DD-48F5-8203-187F92F3F324}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CellsSharp.Tests", "test\CellsSharp.Tests\CellsSharp.Tests.csproj", "{72E269D3-25C9-4026-AD51-0E0B627163AB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F054A09A-DDB1-4E08-BF55-B76FD2B32F81}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{00ED1C4B-230B-45BD-B809-C0059061BC33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00ED1C4B-230B-45BD-B809-C0059061BC33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00ED1C4B-230B-45BD-B809-C0059061BC33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00ED1C4B-230B-45BD-B809-C0059061BC33}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72E269D3-25C9-4026-AD51-0E0B627163AB}.Debug|Any CPU.ActiveCfg = Debug_net50|Any CPU
+		{72E269D3-25C9-4026-AD51-0E0B627163AB}.Debug|Any CPU.Build.0 = Debug_net50|Any CPU
+		{72E269D3-25C9-4026-AD51-0E0B627163AB}.Release|Any CPU.ActiveCfg = Release_net50|Any CPU
+		{72E269D3-25C9-4026-AD51-0E0B627163AB}.Release|Any CPU.Build.0 = Release_net50|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{00ED1C4B-230B-45BD-B809-C0059061BC33} = {33538573-1F3B-47B9-80A8-A954844DC003}
+		{72E269D3-25C9-4026-AD51-0E0B627163AB} = {BF24E0BD-25DD-48F5-8203-187F92F3F324}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {60793B8E-D27A-48A4-A490-F185E34F7645}
+	EndGlobalSection
+EndGlobal

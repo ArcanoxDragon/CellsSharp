@@ -1,0 +1,31 @@
+﻿<!--EXTERNAL_PROPERTIES: TargetFramework-->
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Like DocumentFormat.OpenXml does, we have framework "polyfill" to fill gaps between framework/standard versions.
+			 The files will only be included for the frameworks on which they are needed. -->
+		<Compile Remove="System\**\*.cs" />
+		<None Include="System" />
+	</ItemGroup>
+
+	<!-- Include required polyfill for netstandard2.0 -->
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<Compile Include="System\Diagnostics\CodeAnalysis\NullableAttributes.cs" />
+		<Compile Include="System\Runtime\CompilerServices\IsExternalInit.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Autofac" Version="6.2.0" />
+		<PackageReference Include="DocumentFormat.OpenXml" Version="2.13.0" />
+		<PackageReference Include="JetBrains.Annotations" Version="2021.2.0" />
+		<PackageReference Include="System.IO.Packaging" Version="4.7.0" />
+	</ItemGroup>
+
+</Project>
