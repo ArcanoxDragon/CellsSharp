@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using CellsSharp.Internal.ChangeTracking;
 using CellsSharp.IoC;
 using CellsSharp.Worksheets;
 using CellsSharp.Worksheets.Internal;
@@ -15,16 +16,18 @@ namespace CellsSharp.Workbooks.Internal
 	{
 		private readonly List<ILifetimeScope> openWorksheetScopes = new();
 
-		public SheetCollection(ILifetimeScope documentScope, WorkbookPart workbookPart)
+		public SheetCollection(ILifetimeScope documentScope, IChangeNotifier changeNotifier, WorkbookPart workbookPart)
 		{
 			DocumentScope = documentScope;
+			ChangeNotifier = changeNotifier;
 			WorkbookPart = workbookPart;
 			Sheets = workbookPart.Workbook.Sheets ??= new Sheets();
 		}
 
-		private ILifetimeScope DocumentScope { get; }
-		private WorkbookPart   WorkbookPart  { get; }
-		private Sheets         Sheets        { get; }
+		private ILifetimeScope  DocumentScope  { get; }
+		private IChangeNotifier ChangeNotifier { get; }
+		private WorkbookPart    WorkbookPart   { get; }
+		private Sheets          Sheets         { get; }
 
 		#region IEnumerable<IWorksheetInfo>
 
@@ -76,6 +79,7 @@ namespace CellsSharp.Workbooks.Internal
 			};
 
 			Sheets.AppendChild(sheet);
+			ChangeNotifier.NotifyOfChange(this, WorkbookPart);
 
 			return OpenWorksheet(worksheetPart);
 		}
@@ -125,6 +129,7 @@ namespace CellsSharp.Workbooks.Internal
 			var sheet = FindSheetBy(predicate);
 
 			Sheets.RemoveChild(sheet);
+			ChangeNotifier.NotifyOfChange(this, WorkbookPart);
 		}
 
 		private IWorksheet OpenWorksheet(WorksheetPart worksheetPart)

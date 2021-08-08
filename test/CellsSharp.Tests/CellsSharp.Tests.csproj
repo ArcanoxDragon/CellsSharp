@@ -24,4 +24,13 @@
 		<ProjectReference Include="..\..\src\CellsSharp\CellsSharp.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="ExtractTestDocument.bat">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	  <None Update="ExtractTestDocument.ps1">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

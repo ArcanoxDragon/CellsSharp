@@ -6,6 +6,7 @@ namespace CellsSharp.Workbooks
 	// TODO: Documentation
 	public interface IWorkbook
 	{
-		public ISheetCollection Sheets { get; }
+		ISheetCollection Sheets  { get; }
+		IStringTable     Strings { get; }
 	}
 }
