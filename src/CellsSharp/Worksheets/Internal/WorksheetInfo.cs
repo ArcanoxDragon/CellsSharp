@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
+﻿using System;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CellsSharp.Worksheets.Internal
 {
@@ -6,7 +7,11 @@ namespace CellsSharp.Worksheets.Internal
 	{
 		public WorksheetInfo(Sheet sheet)
 		{
+			if (sheet.SheetId is null || sheet.Name?.Value is null)
+				throw new ArgumentException("The provided Sheet is not valid", nameof(sheet));
 
+			Index = sheet.SheetId.Value;
+			Name = sheet.Name.Value;
 		}
 
 		/// <inheritdoc />

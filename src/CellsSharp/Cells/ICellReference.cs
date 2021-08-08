@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace CellsSharp.Cells
 {
+	[PublicAPI]
 	public interface ICellReference : IEnumerable<CellAddress>, IEquatable<ICellReference>
 	{
 		/// <summary>
