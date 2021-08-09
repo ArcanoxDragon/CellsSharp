@@ -1,9 +1,7 @@
 ﻿using Autofac;
 using Autofac.Builder;
-using Autofac.Core;
 using CellsSharp.Documents;
 using CellsSharp.Documents.Internal;
-using CellsSharp.Extensions;
 using CellsSharp.Internal.ChangeTracking;
 using CellsSharp.Internal.DataHandlers;
 using CellsSharp.Workbooks;
@@ -12,7 +10,6 @@ using CellsSharp.Worksheets;
 using CellsSharp.Worksheets.Internal;
 using DocumentFormat.OpenXml.Packaging;
 using MsSpreadsheetDocument = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument;
-using MsWorkbook = DocumentFormat.OpenXml.Spreadsheet.Workbook;
 
 namespace CellsSharp.IoC
 {
@@ -68,18 +65,18 @@ namespace CellsSharp.IoC
 				var document = c.Resolve<MsSpreadsheetDocument>();
 				var workbookPart = document.WorkbookPart ?? document.AddWorkbookPart();
 
-				if (workbookPart.Workbook is null!)
-					workbookPart.Workbook = new MsWorkbook();
-
 				return workbookPart;
 			}).InstancePerDocument();
 			builder.RegisterType<SpreadsheetDocumentImpl>().As<ISpreadsheetDocument>().As<ISpreadsheetDocumentImpl>().InstancePerDocument();
 			builder.RegisterType<ChangeNotifier>().As<IChangeNotifier>().InstancePerDocument();
 			builder.RegisterType<Workbook>().As<IWorkbook>().InstancePerDocument();
-			builder.RegisterType<SheetCollection>().As<ISheetCollection>().As<IDocumentSaveLoadHandler>().InstancePerDocument();
 
 			// Workbook parts
 			builder.RegisterType<WorkbookPartHandler>().As<IDocumentSaveLoadHandler>().InstancePerDocument();
+			builder.RegisterPartElementHandler<WorkbookPart, SheetCollection>()
+				   .As<ISheetCollection>()
+				   .As<IDocumentSaveLoadHandler>()
+				   .InstancePerDocument();
 			builder.RegisterChildPartHandler<WorkbookPart, StringTablePartHandler>().InstancePerDocument();
 			builder.RegisterPartElementHandler<SharedStringTablePart, StringTable>().As<IStringTable>().InstancePerDocument();
 		}
@@ -92,14 +89,6 @@ namespace CellsSharp.IoC
 
 		private static void RegisterWorksheetServices(ContainerBuilder builder)
 		{
-			builder.Register(c => {
-				var workbookPart = c.Resolve<WorkbookPart>();
-				var worksheetPart = c.Resolve<WorksheetPart>();
-				var sheet = workbookPart.GetSheetForWorksheetPart(worksheetPart)
-							?? throw new DependencyResolutionException("Sheet element not found for the worksheet");
-
-				return new WorksheetInfo(sheet);
-			}).As<IWorksheetInfo>().InstancePerWorksheet();
 			builder.RegisterType<Worksheet>().As<IWorksheet>().As<IWorksheetImpl>().InstancePerWorksheet();
 			builder.RegisterType<ChangeNotifier>().As<IChangeNotifier>().InstancePerWorksheet();
 

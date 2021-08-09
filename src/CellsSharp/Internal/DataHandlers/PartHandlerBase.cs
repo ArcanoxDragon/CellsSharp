@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CellsSharp.Extensions;
 using CellsSharp.Internal.ChangeTracking;
@@ -43,7 +44,7 @@ namespace CellsSharp.Internal.DataHandlers
 				if (this.partElementHandlers.Count(h => h.HandlesRootElement) > 1)
 					throw new InvalidOperationException($"More than one root element handler found for part \"{typeof(TPart).Name}\"");
 
-				using OpenXmlWriter writer = OpenXmlWriter.Create(part);
+				using var writer = OpenXmlWriter.Create(part);
 
 				writer.WriteStartDocument();
 
@@ -72,7 +73,7 @@ namespace CellsSharp.Internal.DataHandlers
 			{
 				var elementHandlers = this.partElementHandlers.ToDictionary(h => h.HandledElementType, h => h);
 
-				using OpenXmlReader reader = OpenXmlReader.Create(part);
+				using var reader = OpenXmlReader.Create(part);
 
 				// Move to the root element
 				if (!reader.Read())

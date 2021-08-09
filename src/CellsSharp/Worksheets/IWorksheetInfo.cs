@@ -14,5 +14,10 @@ namespace CellsSharp.Worksheets
 		/// Gets the name of the worksheet
 		/// </summary>
 		string Name { get; }
+
+		/// <summary>
+		/// Gets the relationship ID of the worksheet's part
+		/// </summary>
+		string RelationshipId { get; }
 	}
 }

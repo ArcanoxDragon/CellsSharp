@@ -3,45 +3,38 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using CellsSharp.Extensions;
 using CellsSharp.Internal.ChangeTracking;
 using CellsSharp.Internal.DataHandlers;
 using CellsSharp.IoC;
 using CellsSharp.Worksheets;
 using CellsSharp.Worksheets.Internal;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CellsSharp.Workbooks.Internal
 {
-	sealed class SheetCollection : ISheetCollection, IDocumentSaveLoadHandler, IDisposable
+	sealed class SheetCollection : PartElementHandler<WorkbookPart, Sheets>, ISheetCollection, IDocumentSaveLoadHandler, IDisposable
 	{
-		private readonly List<ILifetimeScope> openWorksheetScopes = new();
+		private readonly List<IWorksheetInfo>                       workbookSheets      = new();
+		private readonly Dictionary<IWorksheetInfo, ILifetimeScope> openWorksheetScopes = new();
 
 		public SheetCollection(ILifetimeScope documentScope, IChangeNotifier changeNotifier, WorkbookPart workbookPart)
 		{
 			DocumentScope = documentScope;
 			ChangeNotifier = changeNotifier;
 			WorkbookPart = workbookPart;
-			Sheets = workbookPart.Workbook.Sheets ??= new Sheets();
 		}
 
 		private ILifetimeScope  DocumentScope  { get; }
 		private IChangeNotifier ChangeNotifier { get; }
 		private WorkbookPart    WorkbookPart   { get; }
-		private Sheets          Sheets         { get; }
 
 		#region IEnumerable<IWorksheetInfo>
 
-		private IEnumerable<IWorksheetInfo> EnumerateWorksheets()
-		{
-			CheckDisposed();
-
-			foreach (var sheet in Sheets.Elements<Sheet>())
-				yield return new WorksheetInfo(sheet);
-		}
-
 		/// <inheritdoc />
-		public IEnumerator<IWorksheetInfo> GetEnumerator() => EnumerateWorksheets().GetEnumerator();
+		public IEnumerator<IWorksheetInfo> GetEnumerator() => this.workbookSheets.GetEnumerator();
 
 		/// <inheritdoc />
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -51,17 +44,17 @@ namespace CellsSharp.Workbooks.Internal
 		#region ISheetCollection
 
 		/// <inheritdoc />
-		public IWorksheetInfo this[string name] => new WorksheetInfo(FindSheetBy(s => s.Name?.Value == name));
+		public IWorksheetInfo this[string name] => FindSheetBy(s => s.Name == name);
 
 		/// <inheritdoc />
-		public IWorksheetInfo this[uint index] => new WorksheetInfo(FindSheetBy(s => s.SheetId?.Value == index));
+		public IWorksheetInfo this[uint index] => FindSheetBy(s => s.Index == index);
 
 		/// <inheritdoc />
 		public IWorksheet AddNew()
 		{
 			CheckDisposed();
 
-			var sheetId = GetNextSheetId();
+			var sheetId = GetNextSheetIndex();
 
 			return AddNew($"Sheet{sheetId}");
 		}
@@ -72,17 +65,14 @@ namespace CellsSharp.Workbooks.Internal
 			CheckDisposed();
 
 			var worksheetPart = WorkbookPart.AddNewPart<WorksheetPart>();
-			var sheetId = GetNextSheetId();
-			var sheet = new Sheet {
-				SheetId = sheetId,
-				Name = name,
-				Id = WorkbookPart.GetIdOfPart(worksheetPart),
-			};
+			var sheetIndex = GetNextSheetIndex();
+			var relationshipId = WorkbookPart.GetIdOfPart(worksheetPart);
+			var worksheetInfo = new WorksheetInfo(sheetIndex, name, relationshipId);
 
-			Sheets.AppendChild(sheet);
+			this.workbookSheets.Add(worksheetInfo);
 			ChangeNotifier.NotifyOfChange(this, WorkbookPart);
 
-			return OpenWorksheet(worksheetPart);
+			return OpenWorksheet(worksheetInfo, worksheetPart);
 		}
 
 		/// <inheritdoc />
@@ -90,12 +80,10 @@ namespace CellsSharp.Workbooks.Internal
 		{
 			CheckDisposed();
 
-			var sheet = FindSheetBy(s => s.SheetId?.Value == worksheetInfo.Index);
-
-			if (sheet.Id?.Value is null || !WorkbookPart.TryGetPartById(sheet.Id.Value, out var part) || part is not WorksheetPart worksheetPart)
+			if (!WorkbookPart.TryGetPartById(worksheetInfo.RelationshipId, out var part) || part is not WorksheetPart worksheetPart)
 				throw new InvalidOperationException("A matching worksheet was not found in the workbook");
 
-			var worksheet = OpenWorksheet(worksheetPart);
+			var worksheet = OpenWorksheet(worksheetInfo, worksheetPart);
 
 			worksheet.Load();
 
@@ -107,9 +95,20 @@ namespace CellsSharp.Workbooks.Internal
 		{
 			CheckDisposed();
 
-			var sheet = FindSheetBy(s => s.SheetId?.Value == worksheetInfo.Index);
+			if (!this.workbookSheets.Contains(worksheetInfo))
+				return;
+			
+			if (!WorkbookPart.TryGetPartById(worksheetInfo.RelationshipId, out var part) || part is not WorksheetPart worksheetPart)
+				throw new InvalidOperationException("A matching worksheet was not found in the workbook");
 
-			Sheets.RemoveChild(sheet);
+			if (this.openWorksheetScopes.TryGetValue(worksheetInfo, out var worksheetScope))
+			{
+				worksheetScope.Dispose();
+				this.openWorksheetScopes.Remove(worksheetInfo);
+			}
+			
+			this.workbookSheets.Remove(worksheetInfo);
+			WorkbookPart.DeletePart(worksheetPart);
 			ChangeNotifier.NotifyOfChange(this, WorkbookPart);
 		}
 
@@ -120,7 +119,7 @@ namespace CellsSharp.Workbooks.Internal
 		/// <inheritdoc />
 		public void Save()
 		{
-			foreach (var worksheetScope in this.openWorksheetScopes)
+			foreach (var worksheetScope in this.openWorksheetScopes.Values)
 			{
 				var worksheet = worksheetScope.Resolve<IWorksheet>();
 
@@ -136,13 +135,51 @@ namespace CellsSharp.Workbooks.Internal
 
 		#endregion
 
+		#region IPartElementHandler
+
+		/// <inheritdoc />
+		protected override void ReadElementData(OpenXmlReader reader)
+		{
+			this.workbookSheets.Clear();
+
+			reader.VisitChildren<Sheet>(() => {
+				var sheet = (Sheet) reader.LoadCurrentElement()!;
+
+				this.workbookSheets.Add(new WorksheetInfo(sheet));
+			});
+		}
+
+		/// <inheritdoc />
+		protected override void WriteElementData(OpenXmlWriter writer)
+		{
+			var nameValue = new StringValue();
+			var sheetIdValue = new UInt32Value();
+			var relationshipIdValue = new StringValue();
+			var sheet = new Sheet {
+				Name = nameValue,
+				SheetId = sheetIdValue,
+				Id = relationshipIdValue,
+			};
+
+			foreach (var worksheetInfo in this.workbookSheets)
+			{
+				nameValue.Value = worksheetInfo.Name;
+				sheetIdValue.Value = worksheetInfo.Index;
+				relationshipIdValue.Value = worksheetInfo.RelationshipId;
+
+				writer.WriteElement(sheet);
+			}
+		}
+
+		#endregion
+
 		#region Private Methods
 
-		private Sheet FindSheetBy(Func<Sheet, bool> predicate)
+		private IWorksheetInfo FindSheetBy(Func<IWorksheetInfo, bool> predicate)
 		{
 			CheckDisposed();
 
-			var sheet = Sheets.Elements<Sheet>().SingleOrDefault(predicate);
+			var sheet = this.workbookSheets.SingleOrDefault(predicate);
 
 			if (sheet is null)
 				throw new InvalidOperationException("A matching sheet was not found in the workbook");
@@ -150,22 +187,22 @@ namespace CellsSharp.Workbooks.Internal
 			return sheet;
 		}
 
-		private IWorksheetImpl OpenWorksheet(WorksheetPart worksheetPart)
+		private IWorksheetImpl OpenWorksheet(IWorksheetInfo worksheetInfo, WorksheetPart worksheetPart)
 		{
 			var worksheetScope = Services.CreateWorksheetScope(DocumentScope, worksheetPart);
 			var worksheet = worksheetScope.Resolve<IWorksheetImpl>();
 
-			this.openWorksheetScopes.Add(worksheetScope);
+			this.openWorksheetScopes.Add(worksheetInfo, worksheetScope);
 
 			return worksheet;
 		}
 
-		private uint GetNextSheetId()
+		private uint GetNextSheetIndex()
 		{
-			if (!Sheets.Elements<Sheet>().Any())
+			if (!this.workbookSheets.Any())
 				return 1;
 
-			return Sheets.Elements<Sheet>().Max(s => s.SheetId?.Value ?? 0) + 1;
+			return this.workbookSheets.Max(s => s.Index) + 1;
 		}
 
 		#endregion
@@ -185,7 +222,7 @@ namespace CellsSharp.Workbooks.Internal
 			if (this.disposed)
 				return;
 
-			foreach (var worksheetScope in this.openWorksheetScopes)
+			foreach (var worksheetScope in this.openWorksheetScopes.Values)
 				worksheetScope.Dispose();
 
 			this.openWorksheetScopes.Clear();
