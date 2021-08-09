@@ -49,6 +49,9 @@ namespace CellsSharp.Cells
 		#region ICellReference
 
 		/// <inheritdoc />
+		public bool IsEmpty => Start.IsEmpty || End.IsEmpty;
+
+		/// <inheritdoc />
 		public bool IsValid => Start.IsValid && End.IsValid;
 
 		/// <inheritdoc />

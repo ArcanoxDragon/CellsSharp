@@ -23,22 +23,27 @@ namespace CellsSharp.IoC
 
 		#region Registration Helpers
 
-		private static void InstancePerDocument<TLimit, TActivatorData, TRegistrationStyle>(
-			this IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> builder
-		) => builder.InstancePerMatchingLifetimeScope(DocumentLifetimeTag);
+		private static IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle>
+			InstancePerDocument<TLimit, TActivatorData, TRegistrationStyle>(
+				this IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> builder
+			) => builder.InstancePerMatchingLifetimeScope(DocumentLifetimeTag);
 
-		private static void InstancePerWorksheet<TLimit, TActivatorData, TRegistrationStyle>(
-			this IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> builder
-		) => builder.InstancePerMatchingLifetimeScope(WorksheetLifetimeTag);
+		private static IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle>
+			InstancePerWorksheet<TLimit, TActivatorData, TRegistrationStyle>(
+				this IRegistrationBuilder<TLimit, TActivatorData, TRegistrationStyle> builder
+			) => builder.InstancePerMatchingLifetimeScope(WorksheetLifetimeTag);
 
-		private static void RegisterSaveLoadHandler<THandler>(this ContainerBuilder builder)
-			where THandler : ISaveLoadHandler
-			=> builder.RegisterType<THandler>().As<ISaveLoadHandler>().InstancePerDocument();
-
-		private static void RegisterChildPartHandler<TParentPart, THandler>(this ContainerBuilder builder)
+		private static IRegistrationBuilder<THandler, ConcreteReflectionActivatorData, SingleRegistrationStyle>
+			RegisterChildPartHandler<TParentPart, THandler>(this ContainerBuilder builder)
 			where TParentPart : OpenXmlPart
 			where THandler : IChildPartHandler<TParentPart>
-			=> builder.RegisterType<THandler>().As<IChildPartHandler<TParentPart>>().InstancePerDocument();
+			=> builder.RegisterType<THandler>().As<IChildPartHandler<TParentPart>>();
+
+		private static IRegistrationBuilder<THandler, ConcreteReflectionActivatorData, SingleRegistrationStyle>
+			RegisterPartElementHandler<TParentPart, THandler>(this ContainerBuilder builder)
+			where TParentPart : OpenXmlPart
+			where THandler : IPartElementHandler<TParentPart>
+			=> builder.RegisterType<THandler>().As<IPartElementHandler<TParentPart>>();
 
 		#endregion
 
@@ -48,11 +53,14 @@ namespace CellsSharp.IoC
 		{
 			var builder = new ContainerBuilder();
 
-			RegisterDocumentServices(builder);
-			RegisterWorksheetServices(builder);
-
 			Container = builder.Build();
 		}
+
+		internal static ILifetimeScope CreateDocumentScope(MsSpreadsheetDocument document)
+			=> Container.BeginLifetimeScope(DocumentLifetimeTag, builder => {
+				builder.RegisterInstance(document);
+				RegisterDocumentServices(builder);
+			});
 
 		private static void RegisterDocumentServices(ContainerBuilder builder)
 		{
@@ -65,18 +73,22 @@ namespace CellsSharp.IoC
 
 				return workbookPart;
 			}).InstancePerDocument();
-			builder.RegisterType<ChangeNotifier>().As<IChangeNotifier>().InstancePerDocument();
 			builder.RegisterType<SpreadsheetDocumentImpl>().As<ISpreadsheetDocument>().As<ISpreadsheetDocumentImpl>().InstancePerDocument();
+			builder.RegisterType<ChangeNotifier>().As<IChangeNotifier>().InstancePerDocument();
 			builder.RegisterType<Workbook>().As<IWorkbook>().InstancePerDocument();
-			builder.RegisterType<SheetCollection>().As<ISheetCollection>().InstancePerDocument();
+			builder.RegisterType<SheetCollection>().As<ISheetCollection>().As<IDocumentSaveLoadHandler>().InstancePerDocument();
 
-			// Part handlers
-			builder.RegisterSaveLoadHandler<WorkbookPartHandler>();
-			builder.RegisterChildPartHandler<WorkbookPart, StringTablePartHandler>();
-
-			// Element handlers
-			builder.RegisterType<StringTable>().As<IStringTable>().As<IPartElementHandler<SharedStringTablePart>>().InstancePerDocument();
+			// Workbook parts
+			builder.RegisterType<WorkbookPartHandler>().As<IDocumentSaveLoadHandler>().InstancePerDocument();
+			builder.RegisterChildPartHandler<WorkbookPart, StringTablePartHandler>().InstancePerDocument();
+			builder.RegisterPartElementHandler<SharedStringTablePart, StringTable>().As<IStringTable>().InstancePerDocument();
 		}
+
+		internal static ILifetimeScope CreateWorksheetScope(ILifetimeScope documentScope, WorksheetPart worksheetPart)
+			=> documentScope.BeginLifetimeScope(WorksheetLifetimeTag, builder => {
+				builder.RegisterInstance(worksheetPart);
+				RegisterWorksheetServices(builder);
+			});
 
 		private static void RegisterWorksheetServices(ContainerBuilder builder)
 		{
@@ -88,17 +100,12 @@ namespace CellsSharp.IoC
 
 				return new WorksheetInfo(sheet);
 			}).As<IWorksheetInfo>().InstancePerWorksheet();
-			builder.RegisterType<WorksheetManager>().As<IWorksheet>().InstancePerWorksheet();
+			builder.RegisterType<Worksheet>().As<IWorksheet>().As<IWorksheetImpl>().InstancePerWorksheet();
+			builder.RegisterType<ChangeNotifier>().As<IChangeNotifier>().InstancePerWorksheet();
+
+			// Worksheet parts
+			builder.RegisterType<WorksheetPartHandler>().As<IWorksheetSaveLoadHandler>().InstancePerWorksheet();
+			builder.RegisterPartElementHandler<WorksheetPart, SheetData>().AsSelf().InstancePerWorksheet();
 		}
-
-		internal static ILifetimeScope CreateDocumentScope(MsSpreadsheetDocument document)
-			=> Container.BeginLifetimeScope(DocumentLifetimeTag, builder => {
-				builder.RegisterInstance(document);
-			});
-
-		internal static ILifetimeScope CreateWorksheetScope(ILifetimeScope documentScope, WorksheetPart worksheetPart)
-			=> documentScope.BeginLifetimeScope(WorksheetLifetimeTag, builder => {
-				builder.RegisterInstance(worksheetPart);
-			});
 	}
 }

@@ -32,12 +32,15 @@ namespace CellsSharp.Tests
 		[TestCase("XFD1", 16384u, 1u)]
 		public void TestSingleCell(string address, uint expectedColumn, uint expectedRow, bool expectColumnAbsolute = false, bool expectRowAbsolute = false)
 		{
-			Assert.True(CellAddress.TryParse(address, out var cellAddress));
+			Assert.True(CellAddress.TryParse(address, out var cellAddress, out var addressType));
+
+			var isColumnAbsolute = ( addressType & AddressType.ColumnAbsolute ) > 0;
+			var isRowAbsolute = ( addressType & AddressType.RowAbsolute ) > 0;
 
 			Assert.AreEqual(expectedColumn, cellAddress.Column);
 			Assert.AreEqual(expectedRow, cellAddress.Row);
-			Assert.AreEqual(expectColumnAbsolute, cellAddress.IsColumnAbsolute);
-			Assert.AreEqual(expectRowAbsolute, cellAddress.IsRowAbsolute);
+			Assert.AreEqual(expectColumnAbsolute, isColumnAbsolute);
+			Assert.AreEqual(expectRowAbsolute, isRowAbsolute);
 		}
 
 		[TestCase("")]

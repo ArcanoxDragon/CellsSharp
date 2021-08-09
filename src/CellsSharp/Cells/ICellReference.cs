@@ -24,6 +24,11 @@ namespace CellsSharp.Cells
 		CellAddress TopLeft { get; }
 
 		/// <summary>
+		/// Gets whether or not this <see cref="ICellReference"/> refers to an empty range of cells.
+		/// </summary>
+		bool IsEmpty { get; }
+
+		/// <summary>
 		/// Returns whether or not the provided <paramref name="cellAddress"/> falls within this <see cref="ICellReference"/>.
 		/// </summary>
 		bool Contains(CellAddress cellAddress);

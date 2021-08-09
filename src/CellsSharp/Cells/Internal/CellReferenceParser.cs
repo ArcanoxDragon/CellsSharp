@@ -13,11 +13,15 @@ namespace CellsSharp.Cells.Internal
 														   RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace,
 														   MatchTimeout);
 
-		private static readonly Regex CellAddressRegex = new(@"^(?<CAbs> \$ )? (?<Column> [A-Z]+ ) (?<RAbs> \$ )? (?<Row> \d+ )$",
+		private static readonly Regex CellAddressRegex = new(@"^(?<Column> [A-Z]+ ) (?<Row> \d+ )$",
 															 RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace,
 															 MatchTimeout);
 
-		internal static CellReference ParseCellReference(string cellReferenceText)
+		private static readonly Regex CellAddressWithTypeRegex = new(@"^(?<CAbs> \$ )? (?<Column> [A-Z]+ ) (?<RAbs> \$ )? (?<Row> \d+ )$",
+																	 RegexOptions.Compiled | RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace,
+																	 MatchTimeout);
+
+		internal static ICellReference ParseCellReference(string cellReferenceText)
 		{
 			if (string.IsNullOrEmpty(cellReferenceText))
 				return CellReference.Empty;
@@ -35,9 +39,19 @@ namespace CellsSharp.Cells.Internal
 					validRanges.Add(cellRange);
 			}
 
-			if (validRanges.Any())
+			if (!validRanges.Any())
 				// Don't want to make a new instance if there are no valid ranges; should just use Empty singleton instead
 				return CellReference.Empty;
+
+			if (validRanges.Count == 1)
+			{
+				var range = validRanges.Single();
+
+				if (range.IsSingleCell)
+					return range.TopLeft;
+
+				return range;
+			}
 
 			return new CellReference(validRanges);
 		}
@@ -88,6 +102,32 @@ namespace CellsSharp.Cells.Internal
 
 			var rowText = match.Groups["Row"].Value;
 			var columnText = match.Groups["Column"].Value;
+
+			if (!TryParseColumnName(columnText, out var columnIndex))
+				return false;
+
+			if (!uint.TryParse(rowText, out var rowIndex) || rowIndex is 0 or > Constants.ExcelMaxRows)
+				return false;
+
+			cellAddress = new CellAddress(rowIndex, columnIndex);
+			return true;
+		}
+
+		internal static bool TryParseCellAddress(string cellAddressText, out CellAddress cellAddress, out AddressType addressType)
+		{
+			cellAddress = CellAddress.None;
+			addressType = AddressType.Relative;
+
+			if (string.IsNullOrEmpty(cellAddressText))
+				return false;
+
+			var match = CellAddressWithTypeRegex.Match(cellAddressText.Trim());
+
+			if (!match.Success)
+				return false;
+
+			var rowText = match.Groups["Row"].Value;
+			var columnText = match.Groups["Column"].Value;
 			var isRowAbsolute = match.Groups["RAbs"].Success;
 			var isColumnAbsolute = match.Groups["CAbs"].Success;
 
@@ -97,7 +137,8 @@ namespace CellsSharp.Cells.Internal
 			if (!uint.TryParse(rowText, out var rowIndex) || rowIndex is 0 or > Constants.ExcelMaxRows)
 				return false;
 
-			cellAddress = new CellAddress(rowIndex, columnIndex, isRowAbsolute, isColumnAbsolute);
+			cellAddress = new CellAddress(rowIndex, columnIndex);
+			addressType = CellAddress.GetAddressType(isRowAbsolute, isColumnAbsolute);
 			return true;
 		}
 

@@ -8,20 +8,16 @@ using MsSpreadsheetDocument = DocumentFormat.OpenXml.Packaging.SpreadsheetDocume
 
 namespace CellsSharp.Documents.Internal
 {
-	sealed class SpreadsheetDocumentImpl : ISpreadsheetDocumentImpl
+	sealed class SpreadsheetDocumentImpl : PartRootBase, ISpreadsheetDocumentImpl
 	{
-		private readonly ILifetimeScope          documentScope;
-		private readonly IList<ISaveLoadHandler> saveLoadHandlers;
-		private readonly IChangeNotifier         changeNotifier;
+		private readonly ILifetimeScope documentScope;
 
 		public SpreadsheetDocumentImpl(
-			ILifetimeScope documentScope, MsSpreadsheetDocument msDocument,
-			IWorkbook workbook, IList<ISaveLoadHandler> saveLoadHandlers,
-			IChangeNotifier changeNotifier)
+			IEnumerable<IDocumentSaveLoadHandler> saveLoadHandlers, IChangeNotifier changeNotifier,
+			ILifetimeScope documentScope, MsSpreadsheetDocument msDocument, IWorkbook workbook
+		) : base(saveLoadHandlers, changeNotifier)
 		{
 			this.documentScope = documentScope;
-			this.saveLoadHandlers = saveLoadHandlers;
-			this.changeNotifier = changeNotifier;
 
 			MsDocument = msDocument;
 			Workbook = workbook;
@@ -55,42 +51,30 @@ namespace CellsSharp.Documents.Internal
 
 		#endregion
 
-		private void SaveParts()
-		{
-			if (!this.changeNotifier.HasChanges)
-				return;
-
-			foreach (var handler in this.saveLoadHandlers)
-				handler.Save();
-
-			this.changeNotifier.MarkClean();
-		}
-
-		private void LoadParts()
-		{
-			foreach (var handler in this.saveLoadHandlers)
-				handler.Load();
-
-			this.changeNotifier.MarkClean();
-		}
-
 		#region IDisposable
 
 		private bool disposed;
 
-		private void CheckDisposed()
+		/// <inheritdoc />
+		protected override void CheckDisposed()
 		{
 			if (this.disposed)
 				throw new ObjectDisposedException(nameof(SpreadsheetDocumentImpl));
+
+			base.CheckDisposed();
 		}
 
-		public void Dispose()
+		protected override void Dispose(bool disposing)
 		{
 			if (this.disposed)
 				return;
 
-			SaveParts();
-			this.documentScope.Dispose();
+			base.Dispose(disposing);
+
+			if (disposing)
+			{
+				this.documentScope.Dispose();
+			}
 
 			this.disposed = true;
 		}

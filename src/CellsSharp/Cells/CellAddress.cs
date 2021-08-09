@@ -10,18 +10,9 @@ namespace CellsSharp.Cells
 	[PublicAPI]
 	public sealed record CellAddress : ICellReference, IComparable<CellAddress>, IComparable
 	{
-		#region AddressType Enum
+		#region AddressType Conversion
 
-		[Flags]
-		private enum AddressType : byte
-		{
-			Relative,
-			RowAbsolute,
-			ColumnAbsolute,
-			Absolute,
-		}
-
-		private static AddressType GetAddressType(bool rowAbsolute, bool columnAbsolute)
+		public static AddressType GetAddressType(bool rowAbsolute, bool columnAbsolute)
 			=> rowAbsolute
 				   ? columnAbsolute
 						 ? AddressType.Absolute
@@ -36,7 +27,7 @@ namespace CellsSharp.Cells
 
 		private CellAddress() { }
 
-		public CellAddress(uint row, uint column, bool rowAbsolute = false, bool columnAbsolute = false)
+		public CellAddress(uint row, uint column)
 		{
 			if (row is 0 or > Constants.ExcelMaxRows)
 				throw new ArgumentOutOfRangeException(nameof(row));
@@ -45,36 +36,17 @@ namespace CellsSharp.Cells
 
 			Row = row;
 			Column = column;
-			Type = GetAddressType(rowAbsolute, columnAbsolute);
 		}
-
-		private AddressType Type { get; }
 
 		public uint Row    { get; }
 		public uint Column { get; }
 
-		public bool IsRowAbsolute    => ( Type & AddressType.RowAbsolute ) > 0;
-		public bool IsColumnAbsolute => ( Type & AddressType.ColumnAbsolute ) > 0;
-
 		public string ColumnName => IsValid ? CellReferenceParser.ColumnIndexToName(Column) : "Invalid";
 
-		public CellAddress AsRelative()
-		{
-			if (Type == AddressType.Relative)
-				return this;
-
-			return new CellAddress(Row, Column);
-		}
-
-		public CellAddress AsAbsolute(bool rowAbsolute = true, bool columnAbsolute = true)
-		{
-			if (Type == GetAddressType(rowAbsolute, columnAbsolute))
-				return this;
-
-			return new CellAddress(Row, Column, rowAbsolute, columnAbsolute);
-		}
-
 		#region ICellReference
+
+		/// <inheritdoc />
+		public bool IsEmpty => ReferenceEquals(this, None);
 
 		/// <inheritdoc />
 		public bool IsValid => Row > 0 && Column > 0;
@@ -155,23 +127,17 @@ namespace CellsSharp.Cells
 		#endregion
 
 		/// <inheritdoc />
-		public override string ToString()
+		public override string ToString() => ToString(AddressType.Relative);
+
+		public string ToString(AddressType addressType)
 			=> IsValid
-				   ? Type switch {
+				   ? addressType switch {
 					   AddressType.RowAbsolute    => $"{ColumnName}${Row}",
 					   AddressType.ColumnAbsolute => $"${ColumnName}{Row}",
 					   AddressType.Absolute       => $"${ColumnName}${Row}",
 					   _                          => $"{ColumnName}{Row}",
 				   }
 				   : "Invalid";
-
-		public void Deconstruct(out uint row, out uint column, out bool rowAbsolute, out bool columnAbsolute)
-		{
-			row = Row;
-			column = Column;
-			rowAbsolute = IsRowAbsolute;
-			columnAbsolute = IsColumnAbsolute;
-		}
 
 		public void Deconstruct(out uint rowIndex, out uint columnIndex)
 		{
@@ -200,9 +166,20 @@ namespace CellsSharp.Cells
 		public static bool TryParse(string cellAddressText, out CellAddress cellAddress)
 			=> CellReferenceParser.TryParseCellAddress(cellAddressText, out cellAddress);
 
+		public static bool TryParse(string cellAddressText, out CellAddress cellAddress, out AddressType addressType)
+			=> CellReferenceParser.TryParseCellAddress(cellAddressText, out cellAddress, out addressType);
+
 		public static CellAddress Parse(string cellAddressText)
 		{
 			if (!TryParse(cellAddressText, out var cellAddress))
+				throw new FormatException("The input string was not a valid cell reference");
+
+			return cellAddress;
+		}
+
+		public static CellAddress Parse(string cellAddressText, out AddressType addressType)
+		{
+			if (!TryParse(cellAddressText, out var cellAddress, out addressType))
 				throw new FormatException("The input string was not a valid cell reference");
 
 			return cellAddress;

@@ -5,14 +5,15 @@ using DocumentFormat.OpenXml.Packaging;
 
 namespace CellsSharp.Workbooks.Internal
 {
-	sealed class StringTablePartHandler : ChildPartHandler<WorkbookPart, SharedStringTablePart>
+	sealed class StringTablePartHandler : DefaultChildPartHandler<WorkbookPart, SharedStringTablePart>
 	{
 		/// <inheritdoc />
 		public StringTablePartHandler(
 			IChangeNotifier changeNotifier,
+			IList<IChildPartHandler<SharedStringTablePart>> childPartHandlers,
 			IList<IPartElementHandler<SharedStringTablePart>> partElementHandlers,
 			IStringTable stringTable
-		) : base(changeNotifier, partElementHandlers)
+		) : base(changeNotifier, childPartHandlers, partElementHandlers)
 		{
 			StringTable = stringTable;
 		}
@@ -21,9 +22,5 @@ namespace CellsSharp.Workbooks.Internal
 
 		/// <inheritdoc />
 		protected override bool PartHasData => StringTable.EntryCount > 0;
-
-		/// <inheritdoc />
-		protected override SharedStringTablePart CreateChildPart(WorkbookPart parentPart)
-			=> parentPart.AddNewPart<SharedStringTablePart>();
 	}
 }

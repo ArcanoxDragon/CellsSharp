@@ -1,6 +1,9 @@
-﻿namespace CellsSharp.Internal.DataHandlers
+﻿using System;
+
+namespace CellsSharp.Internal.DataHandlers
 {
-	public interface ISaveLoadHandler
+	[Obsolete("Do not directly inherit from this interface; use IDocumentSaveLoadHandler or IWorksheetSaveLoadHandler instead")]
+	interface ISaveLoadHandler
 	{
 		/// <summary>
 		/// Called when the document is being saved.
@@ -12,4 +15,10 @@
 		/// </summary>
 		void Load();
 	}
+
+#pragma warning disable 618
+	interface IDocumentSaveLoadHandler : ISaveLoadHandler { }
+
+	interface IWorksheetSaveLoadHandler : ISaveLoadHandler { }
+#pragma warning restore 618
 }

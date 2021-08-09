@@ -25,11 +25,12 @@ namespace CellsSharp.Cells
 			this.ranges = new List<CellRange> { range };
 		}
 
-		public bool IsEmpty => this.ranges.Count == 0;
-
 		public IEnumerable<CellRange> Ranges => this.ranges;
 
 		#region ICellReference
+
+		/// <inheritdoc />
+		public bool IsEmpty => this.ranges.Count == 0;
 
 		/// <inheritdoc />
 		public bool IsValid => true;
@@ -138,18 +139,26 @@ namespace CellsSharp.Cells
 
 		#region Parsing/Conversion
 
+		public static implicit operator CellReference(CellAddress singleAddress) => new(singleAddress);
+
 		public static implicit operator CellReference(CellRange range) => new(range);
 
-		public static implicit operator CellReference(string value) => Parse(value);
+		public static implicit operator CellReference(string value) => Parse(value) switch {
+			// Have to do this weirdly because of how implicit operators are resolved
+			CellAddress address     => address,
+			CellRange range         => range,
+			CellReference reference => reference,
+			_                       => throw new InvalidCastException(),
+		};
 
-		public static bool TryParse(string cellReferenceText, out CellReference cellReference)
+		public static bool TryParse(string cellReferenceText, out ICellReference cellReference)
 		{
 			cellReference = Parse(cellReferenceText);
 
 			return !cellReference.IsEmpty;
 		}
 
-		public static CellReference Parse(string cellReferenceText)
+		public static ICellReference Parse(string cellReferenceText)
 			=> CellReferenceParser.ParseCellReference(cellReferenceText);
 
 		#endregion

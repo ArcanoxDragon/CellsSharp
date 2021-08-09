@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.IO.Packaging;
+using CellsSharp.Cells;
 using NUnit.Framework;
 
 namespace CellsSharp.Tests
@@ -14,14 +15,9 @@ namespace CellsSharp.Tests
 		{
 			using var package = Package.Open(TestDocumentFilename, FileMode.Create, FileAccess.ReadWrite);
 			using var document = SpreadsheetDocument.Create(package);
+			var testSheet = document.Workbook.Sheets.AddNew("Test Sheet");
 
-			document.Workbook.Strings.GetOrInsertValue("Test string 1");
-			document.Workbook.Strings.GetOrInsertValue("Test string 1");
-			document.Workbook.Strings.GetOrInsertValue("Test string 1");
-			document.Workbook.Strings.GetOrInsertValue("Test string 2");
-			document.Workbook.Strings.GetOrInsertValue("Test string 3");
-
-			// var testSheet = document.Workbook.Sheets.AddNew("Test Sheet");
+			testSheet["A1:D4"].CellText = "Fill Test";
 
 			document.Save();
 		}
@@ -31,8 +27,11 @@ namespace CellsSharp.Tests
 		{
 			using var package = Package.Open(TestDocumentFilename, FileMode.Open, FileAccess.Read);
 			using var document = SpreadsheetDocument.Open(package);
+			var testSheetInfo = document.Workbook.Sheets["Test Sheet"];
+			var testSheet = document.Workbook.Sheets.Open(testSheetInfo);
 
-			// TODO: Test assertions
+			foreach (var address in (CellReference) "A1:D4")
+				Assert.That(testSheet[address].CellText, Is.EqualTo("Fill Test"));
 		}
 	}
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CellsSharp.Extensions;
 using CellsSharp.Internal.ChangeTracking;
-using CellsSharp.Internal.Utilities;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
@@ -26,19 +25,13 @@ namespace CellsSharp.Internal.DataHandlers
 			ChangeNotifier = changeNotifier;
 		}
 
-		protected PartHandlerBase(IChangeNotifier changeNotifier, IList<IChildPartHandler<TPart>> childPartHandlers)
-			: this(changeNotifier, childPartHandlers, EmptyList<IPartElementHandler<TPart>>.Instance) { }
-
-		protected PartHandlerBase(IChangeNotifier changeNotifier, IList<IPartElementHandler<TPart>> partElementHandlers)
-			: this(changeNotifier, EmptyList<IChildPartHandler<TPart>>.Instance, partElementHandlers) { }
-
-		protected PartHandlerBase(IChangeNotifier changeNotifier) : this(
-			changeNotifier,
-			EmptyList<IChildPartHandler<TPart>>.Instance,
-			EmptyList<IPartElementHandler<TPart>>.Instance
-		) { }
-
 		protected IChangeNotifier ChangeNotifier { get; }
+
+		protected virtual OpenXmlElement CreateRootElement()
+		{
+			throw new InvalidOperationException($"There was no root element handler for part \"{typeof(TPart).Name}\" and its part handler " +
+												$"does not implement {nameof(CreateRootElement)}.");
+		}
 
 		protected virtual void SavePart(TPart part)
 		{
@@ -54,7 +47,7 @@ namespace CellsSharp.Internal.DataHandlers
 
 				writer.WriteStartDocument();
 
-				var rootElementHandler = this.partElementHandlers.SingleOrDefault();
+				var rootElementHandler = this.partElementHandlers.SingleOrDefault(h => h.HandlesRootElement);
 
 				if (rootElementHandler is not null)
 				{
@@ -62,10 +55,7 @@ namespace CellsSharp.Internal.DataHandlers
 				}
 				else
 				{
-					if (part.RootElement is null)
-						throw new InvalidOperationException($"The \"{typeof(TPart).Name}\" part does not have a root element");
-
-					writer.WriteElement(part.RootElement, () => {
+					writer.WriteElement(CreateRootElement(), () => {
 						foreach (var handler in this.partElementHandlers.OrderBy(h => h.ElementOrder))
 							handler.WriteElement(writer);
 					});

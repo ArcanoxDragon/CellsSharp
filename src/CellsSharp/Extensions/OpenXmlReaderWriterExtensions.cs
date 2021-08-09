@@ -7,6 +7,8 @@ namespace CellsSharp.Extensions
 {
 	static class OpenXmlReaderWriterExtensions
 	{
+		#region Reader.VisitChildren
+
 		/// <summary>
 		/// Enumerates through the children of the <paramref name="reader"/>'s current element.
 		/// Each item returned will be the element type of one of the children, and the reader
@@ -42,6 +44,47 @@ namespace CellsSharp.Extensions
 			}
 		}
 
+		#endregion
+
+		#region Attribute.Is
+
+		internal static bool Is<T>(this OpenXmlAttribute attribute, string localName, out T value) where T : struct
+		{
+			value = default;
+
+			if (attribute.LocalName != localName || attribute.Value is null)
+				return false;
+
+			if (typeof(T).IsEnum)
+			{
+				// Try to parse as EnumValue<T>
+
+				var enumValue = new EnumValue<T> { InnerText = attribute.Value };
+
+				if (enumValue.HasValue)
+				{
+					value = enumValue.Value;
+					return true;
+				}
+
+				return false;
+			}
+
+			try
+			{
+				value = (T) Convert.ChangeType(attribute.Value, typeof(T));
+				return true;
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		#endregion
+
+		#region Writer.WriteElement
+
 		/// <summary>
 		/// Writes the start element for a new element of type <typeparamref name="T"/>, then calls
 		/// <paramref name="writeElementChildren"/> to write the children of that element. Finishes
@@ -71,5 +114,7 @@ namespace CellsSharp.Extensions
 			}
 			writer.WriteEndElement();
 		}
+
+		#endregion
 	}
 }

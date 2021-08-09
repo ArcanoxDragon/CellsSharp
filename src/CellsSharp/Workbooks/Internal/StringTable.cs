@@ -68,15 +68,22 @@ namespace CellsSharp.Workbooks.Internal
 		public override bool HandlesRootElement => true;
 
 		/// <inheritdoc />
+		protected override SharedStringTable CreateElement()
+			=> new() { Count = EntryCount, UniqueCount = EntryCount };
+
+		/// <inheritdoc />
 		protected override void WriteElementData(OpenXmlWriter writer)
 		{
 			Text entryText = new();
-			SharedStringItem entryItem = new(entryText);
+			SharedStringItem entryItem = new();
 
 			foreach (var (_, entry) in this.entryTable)
 			{
 				entryText.Text = entry;
-				writer.WriteElement(entryItem);
+
+				writer.WriteElement(entryItem, () => {
+					writer.WriteElement(entryText);
+				});
 			}
 		}
 

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<Configurations>Debug_net472;Debug_net50;Release_net472;Release_net50</Configurations>
+		<Nullable>enable</Nullable>
+		<StartupObject>CellSharp.Tests.TestRunner.HugeSpreadsheetTestRunner</StartupObject>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" $(Configuration.Contains('net472')) ">
+		<TargetFramework>net472</TargetFramework>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" $(Configuration.Contains('net50')) Or '$(Configuration)' == '' ">
+		<TargetFramework>net5.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\CellsSharp.Tests\CellsSharp.Tests.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -22,20 +22,6 @@ namespace CellsSharp.Internal.DataHandlers
 			IList<IPartElementHandler<TChildPart>> partElementHandlers
 		) : base(changeNotifier, childPartHandlers, partElementHandlers) { }
 
-		protected ChildPartHandler(
-			IChangeNotifier changeNotifier,
-			IList<IChildPartHandler<TChildPart>> childPartHandlers
-		) : base(changeNotifier, childPartHandlers) { }
-
-		protected ChildPartHandler(
-			IChangeNotifier changeNotifier,
-			IList<IPartElementHandler<TChildPart>> partElementHandlers
-		) : base(changeNotifier, partElementHandlers) { }
-
-		protected ChildPartHandler(
-			IChangeNotifier changeNotifier
-		) : base(changeNotifier) { }
-
 		/// <inheritdoc />
 		public void PartSaving(TParentPart parentPart)
 		{

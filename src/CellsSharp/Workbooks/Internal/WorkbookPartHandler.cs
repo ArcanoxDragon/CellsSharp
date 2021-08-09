@@ -5,21 +5,14 @@ using DocumentFormat.OpenXml.Packaging;
 
 namespace CellsSharp.Workbooks.Internal
 {
-	sealed class WorkbookPartHandler : RootPartHandler<WorkbookPart>
+	sealed class WorkbookPartHandler : DefaultRootPartHandler<WorkbookPart>, IDocumentSaveLoadHandler
 	{
 		/// <inheritdoc />
 		public WorkbookPartHandler(
 			IChangeNotifier changeNotifier,
 			IList<IChildPartHandler<WorkbookPart>> childPartHandlers,
+			IList<IPartElementHandler<WorkbookPart>> partElementHandlers,
 			WorkbookPart workbookPart
-		) : base(changeNotifier, childPartHandlers)
-		{
-			WorkbookPart = workbookPart;
-		}
-
-		private WorkbookPart WorkbookPart { get; }
-
-		/// <inheritdoc />
-		protected override WorkbookPart HandledPart => WorkbookPart;
+		) : base(changeNotifier, childPartHandlers, partElementHandlers, workbookPart) { }
 	}
 }

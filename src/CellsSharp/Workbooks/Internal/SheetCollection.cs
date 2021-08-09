@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using CellsSharp.Internal.ChangeTracking;
+using CellsSharp.Internal.DataHandlers;
 using CellsSharp.IoC;
 using CellsSharp.Worksheets;
 using CellsSharp.Worksheets.Internal;
@@ -12,7 +13,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CellsSharp.Workbooks.Internal
 {
-	sealed class SheetCollection : ISheetCollection, IDisposable
+	sealed class SheetCollection : ISheetCollection, IDocumentSaveLoadHandler, IDisposable
 	{
 		private readonly List<ILifetimeScope> openWorksheetScopes = new();
 
@@ -94,17 +95,44 @@ namespace CellsSharp.Workbooks.Internal
 			if (sheet.Id?.Value is null || !WorkbookPart.TryGetPartById(sheet.Id.Value, out var part) || part is not WorksheetPart worksheetPart)
 				throw new InvalidOperationException("A matching worksheet was not found in the workbook");
 
-			return OpenWorksheet(worksheetPart);
+			var worksheet = OpenWorksheet(worksheetPart);
+
+			worksheet.Load();
+
+			return worksheet;
 		}
 
 		/// <inheritdoc />
-		public void Remove(string name) => RemoveSheetBy(s => s.Name?.Value == name);
+		public void Remove(IWorksheetInfo worksheetInfo)
+		{
+			CheckDisposed();
+
+			var sheet = FindSheetBy(s => s.SheetId?.Value == worksheetInfo.Index);
+
+			Sheets.RemoveChild(sheet);
+			ChangeNotifier.NotifyOfChange(this, WorkbookPart);
+		}
+
+		#endregion
+
+		#region ISaveLoadHandler
 
 		/// <inheritdoc />
-		public void Remove(uint index) => RemoveSheetBy(s => s.SheetId?.Value == index);
+		public void Save()
+		{
+			foreach (var worksheetScope in this.openWorksheetScopes)
+			{
+				var worksheet = worksheetScope.Resolve<IWorksheet>();
+
+				worksheet.Save();
+			}
+		}
 
 		/// <inheritdoc />
-		public void Remove(IWorksheetInfo worksheetInfo) => Remove(worksheetInfo.Index);
+		public void Load()
+		{
+			// Do nothing; worksheets are loaded when they are opened
+		}
 
 		#endregion
 
@@ -122,23 +150,14 @@ namespace CellsSharp.Workbooks.Internal
 			return sheet;
 		}
 
-		private void RemoveSheetBy(Func<Sheet, bool> predicate)
-		{
-			CheckDisposed();
-
-			var sheet = FindSheetBy(predicate);
-
-			Sheets.RemoveChild(sheet);
-			ChangeNotifier.NotifyOfChange(this, WorkbookPart);
-		}
-
-		private IWorksheet OpenWorksheet(WorksheetPart worksheetPart)
+		private IWorksheetImpl OpenWorksheet(WorksheetPart worksheetPart)
 		{
 			var worksheetScope = Services.CreateWorksheetScope(DocumentScope, worksheetPart);
+			var worksheet = worksheetScope.Resolve<IWorksheetImpl>();
 
 			this.openWorksheetScopes.Add(worksheetScope);
 
-			return worksheetScope.Resolve<IWorksheet>();
+			return worksheet;
 		}
 
 		private uint GetNextSheetId()
