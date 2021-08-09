@@ -25,7 +25,7 @@
 		<PackageReference Include="Autofac" Version="6.2.0" />
 		<PackageReference Include="DocumentFormat.OpenXml" Version="2.13.0" />
 		<PackageReference Include="JetBrains.Annotations" Version="2021.2.0" />
-		<PackageReference Include="System.IO.Packaging" Version="4.7.0" />
+		<PackageReference Include="System.IO.Packaging" Version="5.0.0" />
 	</ItemGroup>
 
 </Project>
