@@ -4,6 +4,7 @@ using Autofac;
 using CellsSharp.Internal.ChangeTracking;
 using CellsSharp.Internal.DataHandlers;
 using CellsSharp.Workbooks;
+using DocumentFormat.OpenXml.Packaging;
 using MsSpreadsheetDocument = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument;
 
 namespace CellsSharp.Documents.Internal
@@ -33,7 +34,9 @@ namespace CellsSharp.Documents.Internal
 		{
 			CheckDisposed();
 			SaveParts();
-			MsDocument.Save();
+
+			if (OpenXmlPackage.CanSave)
+				MsDocument.Save();
 		}
 
 		public void SaveAs(string path)
