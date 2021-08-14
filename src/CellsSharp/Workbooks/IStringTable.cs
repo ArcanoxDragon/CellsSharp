@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace CellsSharp.Workbooks
 {
@@ -22,11 +21,10 @@ namespace CellsSharp.Workbooks
 		void Clear();
 
 		/// <summary>
-		/// Gets the value of the string at the provided <paramref name="index"/>
-		/// and stores it in <paramref name="value"/>. Returns true if the string
-		/// exists or false if it does not.
+		/// Gets the value of the string at the provided <paramref name="index"/>.
+		/// If the given index does not exist, <see cref="string.Empty"/> is returned.
 		/// </summary>
-		bool TryGetValue(uint index, [MaybeNullWhen(false)] out string value);
+		string GetValue(uint index);
 
 		/// <summary>
 		/// Inserts the provided <paramref name="value"/> if it does not already exist.

@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 namespace CellsSharp.Cells
 {
 	[PublicAPI]
-	public sealed class CellReference : ICellReference
+	public sealed class CellReference : ICellReference, IEnumerable<CellAddress>
 	{
 		public static readonly CellReference Empty = new(Enumerable.Empty<CellRange>());
 
@@ -29,31 +29,80 @@ namespace CellsSharp.Cells
 
 		#region ICellReference
 
-		public bool IsEmpty => this.ranges.Count == 0;
-
-		public bool IsValid => true;
-
+		public bool IsEmpty      => this.ranges.Count == 0;
+		public bool IsValid      => true;
 		public bool IsSingleCell => this.ranges.Count == 1 && this.ranges.First().IsSingleCell;
 
 		/// <remarks>
-		/// The top-left cell will be determined by sorting the Start address of all ranges
-		/// represented by this <see cref="CellReference"/> by their distance to the top-left
-		/// corner of the worksheet. In the event of a tie, the highest row wins.
+		/// The top-left cell will be determined by sorting the <see cref="CellRange.TopLeft"/>
+		/// address of all ranges represented by this <see cref="CellReference"/> by their
+		/// cartesian distance to the top-left corner of the worksheet. In the event of a tie,
+		/// the range with the top-most row wins.
 		/// </remarks>
 		public CellAddress TopLeft
 			=> IsEmpty
 				   ? CellAddress.None
 				   : this.ranges
-						 .OrderBy(r => Math.Sqrt(r.Start.Row * r.Start.Row + r.Start.Column * r.Start.Column))
-						 .ThenBy(r => r.Start.Row)
+						 .OrderBy(r => r.TopLeft - CellAddress.WorksheetTopLeft)
+						 .ThenBy(r => r.TopLeft.Row)
 						 .First()
-						 .Start;
+						 .TopLeft;
 
-		public bool Contains(CellAddress cellAddress) => this.ranges.Any(r => r.Contains(cellAddress));
+		/// <remarks>
+		/// The top-right cell will be determined by sorting the <see cref="CellRange.TopRight"/>
+		/// address of all ranges represented by this <see cref="CellReference"/> by their
+		/// cartesian distance to the top-right corner of the worksheet. In the event of a tie,
+		/// the range with the top-most row wins.
+		/// </remarks>
+		public CellAddress TopRight
+			=> IsEmpty
+				   ? CellAddress.None
+				   : this.ranges
+						 .OrderBy(r => r.TopRight - CellAddress.WorksheetTopRight)
+						 .ThenBy(r => r.TopRight.Row)
+						 .First()
+						 .TopRight;
 
-		public bool IntersectsWith(ICellReference cellReference) => this.ranges.Any(r => r.IntersectsWith(cellReference));
+		/// <remarks>
+		/// The bottom-left cell will be determined by sorting the <see cref="CellRange.BottomLeft"/>
+		/// address of all ranges represented by this <see cref="CellReference"/> by their
+		/// cartesian distance to the bottom-left corner of the worksheet. In the event of a tie,
+		/// the range with the bottom-most row wins.
+		/// </remarks>
+		public CellAddress BottomLeft
+			=> IsEmpty
+				   ? CellAddress.None
+				   : this.ranges
+						 .OrderBy(r => r.BottomLeft - CellAddress.WorksheetBottomLeft)
+						 .ThenByDescending(r => r.BottomLeft.Row)
+						 .First()
+						 .BottomLeft;
 
-		public bool FullyContains(ICellReference cellReference) => this.ranges.Any(r => r.FullyContains(cellReference));
+		/// <remarks>
+		/// The bottom-right cell will be determined by sorting the <see cref="CellRange.BottomRight"/>
+		/// address of all ranges represented by this <see cref="CellReference"/> by their
+		/// cartesian distance to the bottom-right corner of the worksheet. In the event of a tie,
+		/// the range with the bottom-most row wins.
+		/// </remarks>
+		public CellAddress BottomRight
+			=> IsEmpty
+				   ? CellAddress.None
+				   : this.ranges
+						 .OrderBy(r => r.BottomRight - CellAddress.WorksheetBottomRight)
+						 .ThenByDescending(r => r.BottomRight.Row)
+						 .First()
+						 .BottomRight;
+
+		public CellReference ToCellReference() => this;
+
+		public bool Contains(CellAddress cellAddress)
+			=> this.ranges.Any(r => r.Contains(cellAddress));
+
+		public bool IntersectsWith(ICellReference cellReference)
+			=> this.ranges.Any(r => r.IntersectsWith(cellReference));
+
+		public bool FullyContains(ICellReference cellReference)
+			=> this.ranges.Any(r => r.FullyContains(cellReference));
 
 		#endregion
 

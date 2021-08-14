@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using CellsSharp.Cells.Internal;
 using JetBrains.Annotations;
 
 namespace CellsSharp.Cells
 {
 	[PublicAPI]
-	public sealed record CellAddress : ICellReference, IComparable<CellAddress>, IComparable
+	public readonly struct CellAddress : ICellReference, IComparable<CellAddress>, IComparable
 	{
 		#region AddressType Conversion
 
@@ -23,9 +20,12 @@ namespace CellsSharp.Cells
 
 		#endregion
 
-		public static readonly CellAddress None = new();
+		public static readonly CellAddress None;
 
-		private CellAddress() { }
+		public static readonly CellAddress WorksheetTopLeft     = new(1, 1);
+		public static readonly CellAddress WorksheetTopRight    = new(1, Constants.ExcelMaxColumns);
+		public static readonly CellAddress WorksheetBottomLeft  = new(Constants.ExcelMaxRows, 1);
+		public static readonly CellAddress WorksheetBottomRight = new(Constants.ExcelMaxRows, Constants.ExcelMaxColumns);
 
 		public CellAddress(uint row, uint column)
 		{
@@ -45,31 +45,26 @@ namespace CellsSharp.Cells
 
 		#region ICellReference
 
-		public bool IsEmpty => ReferenceEquals(this, None);
-
-		public bool IsValid => Row > 0 && Column > 0;
-
+		public bool IsEmpty      => Row == 0 || Column == 0;
+		public bool IsValid      => !IsEmpty;
 		public bool IsSingleCell => true;
 
-		public CellAddress TopLeft => this;
+		public CellAddress TopLeft     => this;
+		public CellAddress TopRight    => this;
+		public CellAddress BottomLeft  => this;
+		public CellAddress BottomRight => this;
 
+		public CellReference ToCellReference() => new(this);
 		public bool Contains(CellAddress cellAddress) => Equals(cellAddress);
-
 		public bool IntersectsWith(ICellReference cellReference) => cellReference.Contains(this);
-
 		public bool FullyContains(ICellReference cellReference) => Equals(cellReference);
 
 		#endregion
 
 		#region IComparable<CellAddress>
 
-		public int CompareTo(CellAddress? other)
+		public int CompareTo(CellAddress other)
 		{
-			if (ReferenceEquals(this, other))
-				return 0;
-			if (ReferenceEquals(null, other))
-				return 1;
-
 			var rowComparison = Row.CompareTo(other.Row);
 
 			if (rowComparison != 0)
@@ -78,41 +73,74 @@ namespace CellsSharp.Cells
 			return Column.CompareTo(other.Column);
 		}
 
-		public int CompareTo(object? obj)
-		{
-			if (ReferenceEquals(this, obj))
-				return 0;
-			if (ReferenceEquals(null, obj))
-				return 1;
-			if (GetType() != obj.GetType())
-				return 1;
-
-			return CompareTo((CellAddress) obj);
-		}
-
-		#endregion
-
-		#region IEnumerable<CellAddress>
-
-		public IEnumerator<CellAddress> GetEnumerator() => Enumerable.Repeat(this, 1).GetEnumerator();
-
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		public int CompareTo(object? obj) => obj switch {
+			CellAddress other => CompareTo(other),
+			_                 => 1,
+		};
 
 		#endregion
 
 		#region IEquatable<ICellReference>
 
-		public bool Equals(ICellReference? other)
-		{
-			if (ReferenceEquals(null, other))
-				return false;
-			if (ReferenceEquals(this, other))
-				return true;
+		public bool Equals(ICellReference? other) => other switch {
+			{ IsSingleCell: true } => Equals(other.TopLeft),
+			_                      => false,
+		};
 
-			return other.IsSingleCell && Equals(other.TopLeft);
+		#endregion
+
+		#region Equality
+
+		public override bool Equals(object? obj) => obj switch {
+			CellAddress other => Equals(other),
+			_                 => false,
+		};
+
+		public bool Equals(CellAddress other)
+			=> Row == other.Row && Column == other.Column;
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return ( (int) Row * 397 ) ^ (int) Column;
+			}
+		}
+
+		public static bool operator ==(CellAddress left, CellAddress right) => left.Equals(right);
+		public static bool operator !=(CellAddress left, CellAddress right) => !left.Equals(right);
+
+		#endregion
+
+		#region Relational Operators
+
+		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is above and to the left of the right-side one</returns>
+		public static bool operator <(CellAddress left, CellAddress right) => left.Row < right.Row && left.Column < right.Column;
+
+		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is above and to the left of, or equal to, the right-side one</returns>
+		public static bool operator <=(CellAddress left, CellAddress right) => left.Row <= right.Row && left.Column <= right.Column;
+
+		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is below and to the right of the right-side one</returns>
+		public static bool operator >(CellAddress left, CellAddress right) => left.Row > right.Row && left.Column > right.Column;
+
+		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is below and to the right of, or equal to, the right-side one</returns>
+		public static bool operator >=(CellAddress left, CellAddress right) => left.Row >= right.Row && left.Column >= right.Column;
+
+		/// <returns>
+		/// The cartesian distance between the top-left corners of the cells at
+		/// <paramref name="left"/> and <paramref name="right"/>.
+		/// </returns>
+		public static double operator -(CellAddress left, CellAddress right)
+		{
+			double xDist = Math.Abs(right.Column - left.Column);
+			double yDist = Math.Abs(right.Row - left.Row);
+
+			return Math.Sqrt(xDist * xDist + yDist * yDist);
 		}
 
 		#endregion
+
+		#region Parsing/Conversion
 
 		public override string ToString() => ToString(AddressType.Relative);
 
@@ -131,24 +159,6 @@ namespace CellsSharp.Cells
 			rowIndex = Row;
 			columnIndex = Column;
 		}
-
-		#region Relational Operators
-
-		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is above and to the left of the right-side one</returns>
-		public static bool operator <(CellAddress left, CellAddress right) => left.Row < right.Row && left.Column < right.Column;
-
-		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is above and to the left of, or equal to, the right-side one</returns>
-		public static bool operator <=(CellAddress left, CellAddress right) => left.Row <= right.Row && left.Column <= right.Column;
-
-		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is below and to the right of the right-side one</returns>
-		public static bool operator >(CellAddress left, CellAddress right) => left.Row > right.Row && left.Column > right.Column;
-
-		/// <returns>Whether or not the left-side <see cref="CellAddress"/> is below and to the right of, or equal to, the right-side one</returns>
-		public static bool operator >=(CellAddress left, CellAddress right) => left.Row >= right.Row && left.Column >= right.Column;
-
-		#endregion
-
-		#region Parsing/Conversion
 
 		public static bool TryParse(string cellAddressText, out CellAddress cellAddress)
 			=> CellReferenceParser.TryParseCellAddress(cellAddressText, out cellAddress);

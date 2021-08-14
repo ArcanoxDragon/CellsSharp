@@ -10,12 +10,12 @@ namespace CellsSharp.Worksheets.Internal
 		{
 			SheetData = sheetData;
 			Strings = strings;
-			CellReference = cellReference;
+			CellReference = cellReference.ToCellReference();
 		}
 
-		private SheetData      SheetData     { get; }
-		private IStringTable   Strings       { get; }
-		private ICellReference CellReference { get; }
+		private SheetData     SheetData     { get; }
+		private IStringTable  Strings       { get; }
+		private CellReference CellReference { get; }
 
 		#region ISheetView
 
@@ -24,10 +24,8 @@ namespace CellsSharp.Worksheets.Internal
 			get => FromFirstCell(address => {
 				if (!SheetData.TryGetStringIndex(address, out var stringIndex))
 					return null;
-				if (!Strings.TryGetValue(stringIndex, out var text))
-					return null;
 
-				return text;
+				return Strings.GetValue(stringIndex);
 			}, string.Empty);
 			set
 			{
@@ -49,9 +47,7 @@ namespace CellsSharp.Worksheets.Internal
 		}
 
 		public void ClearValue() => ForAllCells(SheetData.ClearValue);
-
 		public void ClearFormatting() => ForAllCells(SheetData.ClearStyleIndex);
-
 		public void ClearAll() => ForAllCells(SheetData.ClearCell);
 
 		#endregion

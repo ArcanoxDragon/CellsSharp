@@ -14,21 +14,28 @@ namespace CellsSharp.Worksheets.Internal
 {
 	sealed class SheetData : PartElementHandler<WorksheetPart, MsSheetData>
 	{
-		private readonly Dictionary<uint, double> rowHeightMap = new();
+		private readonly SortedList<uint, double> rowHeightMap = new();
 
 		// It's way more memory efficient to store potential cell metadata as primitive types in separate dictionaries.
 		// If we boxed stuff like "uint" or "double" into "object", a 4-byte number becomes a 24-byte reference type
 
-		private readonly HashSet<CellAddress>                cellsWithData   = new();
-		private readonly Dictionary<CellAddress, uint>       stringIndexMap  = new();
-		private readonly Dictionary<CellAddress, double>     numericValueMap = new();
-		private readonly Dictionary<CellAddress, CellValues> dataTypeMap     = new();
-		private readonly Dictionary<CellAddress, uint>       styleIndexMap   = new();
+		private readonly HashSet<CellAddress> cellsWithData = new();
+
+		private readonly SortedList<CellAddress, uint>       stringIndexMap  = new();
+		private readonly SortedList<CellAddress, double>     numericValueMap = new();
+		private readonly SortedList<CellAddress, CellValues> dataTypeMap     = new();
+		private readonly SortedList<CellAddress, uint>       styleIndexMap   = new();
+
+		private uint minKnownRow, minKnownColumn;
+		private uint maxKnownRow, maxKnownColumn;
 
 		public SheetData(IChangeNotifier changeNotifier)
 		{
 			ChangeNotifier = changeNotifier;
 		}
+
+		public CellAddress MinKnownAddress => new(this.minKnownRow, this.minKnownColumn);
+		public CellAddress MaxKnownAddress => new(this.maxKnownRow, this.maxKnownColumn);
 
 		private IChangeNotifier ChangeNotifier { get; }
 
@@ -79,6 +86,7 @@ namespace CellsSharp.Worksheets.Internal
 			this.numericValueMap.Remove(address);
 			this.stringIndexMap[address] = stringIndex;
 
+			UpdateKnownBounds(address);
 			UpdateOccupied(address, true);
 			MarkDirty();
 		}
@@ -88,6 +96,7 @@ namespace CellsSharp.Worksheets.Internal
 			this.stringIndexMap.Remove(address);
 			this.numericValueMap[address] = numericValue;
 
+			UpdateKnownBounds(address);
 			UpdateOccupied(address, true);
 			MarkDirty();
 		}
@@ -98,6 +107,7 @@ namespace CellsSharp.Worksheets.Internal
 			this.numericValueMap.Remove(address);
 			this.dataTypeMap.Remove(address);
 
+			UpdateKnownBounds(address);
 			CheckOccupied(address);
 			MarkDirty();
 		}
@@ -127,6 +137,7 @@ namespace CellsSharp.Worksheets.Internal
 				UpdateOccupied(address, true);
 			}
 
+			UpdateKnownBounds(address);
 			MarkDirty();
 		}
 
@@ -138,6 +149,18 @@ namespace CellsSharp.Worksheets.Internal
 		#region Private Methods
 
 		private void MarkDirty() => ChangeNotifier.NotifyOfChange<WorksheetPart>(this);
+
+		private void UpdateKnownBounds(CellAddress address)
+		{
+			if (this.minKnownRow == 0 || address.Row < this.minKnownRow)
+				this.minKnownRow = address.Row;
+			if (this.minKnownColumn == 0 || address.Column < this.minKnownColumn)
+				this.minKnownColumn = address.Column;
+			if (address.Row > this.maxKnownRow)
+				this.maxKnownRow = address.Row;
+			if (address.Column > this.maxKnownColumn)
+				this.maxKnownColumn = address.Column;
+		}
 
 		private void UpdateOccupied(CellAddress address, bool occupied)
 		{
@@ -275,9 +298,13 @@ namespace CellsSharp.Worksheets.Internal
 				}
 			}
 
-			// sortedOccupiedAddresses will be sorted first by row and then by column
-			foreach (var address in sortedOccupiedAddresses)
+			// Iterate through all addresses inside the maximum bounds we know of
+			// and skip any addresses that we've marked as not containing data
+			foreach (var address in (MinKnownAddress, MaxKnownAddress))
 			{
+				if (!this.cellsWithData.Contains(address))
+					continue;
+
 				var (rowIndex, _) = address;
 
 				if (rowIndex != lastRowIndex)

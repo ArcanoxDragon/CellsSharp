@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
 using CellsSharp.Extensions;
 using CellsSharp.Internal.ChangeTracking;
 using CellsSharp.Internal.DataHandlers;
@@ -24,10 +22,7 @@ namespace CellsSharp.Workbooks.Internal
 
 		private IChangeNotifier ChangeNotifier { get; }
 
-		public string this[uint index]
-			=> TryGetValue(index, out var value)
-				   ? value
-				   : throw new IndexOutOfRangeException("The provided index does not exist in the string table");
+		public string this[uint index] => GetValue(index);
 
 		public uint EntryCount => (uint) this.entryTable.Count;
 
@@ -40,8 +35,13 @@ namespace CellsSharp.Workbooks.Internal
 			ChangeNotifier.NotifyOfChange<SharedStringTablePart>(this);
 		}
 
-		public bool TryGetValue(uint index, [MaybeNullWhen(false)] out string value)
-			=> this.entryTable.TryGetValue(index, out value);
+		public string GetValue(uint index)
+		{
+			if (index >= EntryCount)
+				return string.Empty;
+
+			return this.entryTable[index];
+		}
 
 		public uint GetOrInsertValue(string value)
 		{

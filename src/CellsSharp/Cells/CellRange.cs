@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using CellsSharp.Cells.Internal;
 using JetBrains.Annotations;
 
 namespace CellsSharp.Cells
 {
 	[PublicAPI]
-	public sealed record CellRange : ICellReference
+	public sealed record CellRange : ICellReference, IEnumerable<CellAddress>
 	{
 		public static readonly CellRange Empty = new(CellAddress.None, CellAddress.None);
 
@@ -48,13 +49,16 @@ namespace CellsSharp.Cells
 
 		#region ICellReference
 
-		public bool IsEmpty => Start.IsEmpty || End.IsEmpty;
-
-		public bool IsValid => Start.IsValid && End.IsValid;
-
+		public bool IsEmpty      => Start.IsEmpty || End.IsEmpty;
+		public bool IsValid      => Start.IsValid && End.IsValid;
 		public bool IsSingleCell => Start == End;
 
-		public CellAddress TopLeft => Start;
+		public CellAddress TopLeft     => Start;
+		public CellAddress TopRight    => new(Start.Row, End.Column);
+		public CellAddress BottomLeft  => new(End.Row, Start.Column);
+		public CellAddress BottomRight => End;
+
+		public CellReference ToCellReference() => new(this);
 
 		public bool Contains(CellAddress cellAddress) => cellAddress >= Start && cellAddress <= End;
 
@@ -66,10 +70,10 @@ namespace CellsSharp.Cells
 		};
 
 		public bool FullyContains(ICellReference cellReference) => cellReference switch {
-			CellAddress address => Contains(address),
-			CellRange range     => FullyContains(range),
-			// TODO: CellReference
-			_ => false,
+			CellAddress address     => Contains(address),
+			CellRange range         => FullyContains(range),
+			CellReference reference => reference.Ranges.All(FullyContains),
+			_                       => false,
 		};
 
 		#endregion
@@ -92,13 +96,15 @@ namespace CellsSharp.Cells
 		#region IEquatable<ICellReference>
 
 		public bool Equals(ICellReference? other) => other switch {
-			CellAddress address => address == Start && address == End,
-			CellRange range     => Equals(range),
-			// TODO: CellReference
-			_ => false,
+			CellAddress address     => address == Start && address == End,
+			CellRange range         => Equals(range),
+			CellReference reference => reference.Ranges.All(Equals),
+			_                       => false,
 		};
 
 		#endregion
+
+		#region Parsing/Conversion
 
 		public override string ToString()
 			=> IsValid
@@ -107,9 +113,10 @@ namespace CellsSharp.Cells
 						 : $"{Start}:{End}"
 				   : "Invalid";
 
-		#region Parsing/Conversion
-
 		public static implicit operator CellRange(CellAddress singleAddress) => new(singleAddress);
+
+		public static implicit operator CellRange((CellAddress Start, CellAddress End) addressPair)
+			=> new(addressPair.Start, addressPair.End);
 
 		public static bool TryParse(string cellRangeText, out CellRange cellRange)
 			=> CellReferenceParser.TryParseCellRange(cellRangeText, out cellRange);

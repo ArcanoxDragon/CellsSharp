@@ -12,7 +12,6 @@
 		<!-- Like DocumentFormat.OpenXml does, we have framework "polyfill" to fill gaps between framework/standard versions.
 			 The files will only be included for the frameworks on which they are needed. -->
 		<Compile Remove="System\**\*.cs" />
-		<None Include="System" />
 	</ItemGroup>
 
 	<!-- Include required polyfill for netstandard2.0 -->

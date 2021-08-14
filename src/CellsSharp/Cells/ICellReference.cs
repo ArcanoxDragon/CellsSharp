@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 
 namespace CellsSharp.Cells
 {
 	[PublicAPI]
-	public interface ICellReference : IEnumerable<CellAddress>, IEquatable<ICellReference>
+	public interface ICellReference : IEquatable<ICellReference>
 	{
 		/// <summary>
 		/// Gets whether or not this <see cref="ICellReference"/> is a valid cell reference.
@@ -22,6 +21,24 @@ namespace CellsSharp.Cells
 		/// top-left corner of the worksheet.
 		/// </summary>
 		CellAddress TopLeft { get; }
+
+		/// <summary>
+		/// Gets the cell address within this <see cref="ICellReference"/> that is closest to the
+		/// top-right corner of the worksheet.
+		/// </summary>
+		CellAddress TopRight { get; }
+
+		/// <summary>
+		/// Gets the cell address within this <see cref="ICellReference"/> that is closest to the
+		/// bottom-left corner of the worksheet.
+		/// </summary>
+		CellAddress BottomLeft { get; }
+
+		/// <summary>
+		/// Gets the cell address within this <see cref="ICellReference"/> that is closest to the
+		/// bottom-right corner of the worksheet.
+		/// </summary>
+		CellAddress BottomRight { get; }
 
 		/// <summary>
 		/// Gets whether or not this <see cref="ICellReference"/> refers to an empty range of cells.
@@ -42,5 +59,11 @@ namespace CellsSharp.Cells
 		/// Returns whether or not the provided <paramref name="cellReference"/> is fully contained within this <see cref="ICellReference"/>
 		/// </summary>
 		bool FullyContains(ICellReference cellReference);
+
+		/// <summary>
+		/// Returns a concrete <see cref="CellReference"/> that represents the same collection
+		/// of cells as this <see cref="ICellReference"/>.
+		/// </summary>
+		CellReference ToCellReference();
 	}
 }
