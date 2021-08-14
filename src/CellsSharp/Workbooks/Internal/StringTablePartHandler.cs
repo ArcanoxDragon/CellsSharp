@@ -7,7 +7,6 @@ namespace CellsSharp.Workbooks.Internal
 {
 	sealed class StringTablePartHandler : DefaultChildPartHandler<WorkbookPart, SharedStringTablePart>
 	{
-		/// <inheritdoc />
 		public StringTablePartHandler(
 			IChangeNotifier changeNotifier,
 			IList<IChildPartHandler<SharedStringTablePart>> childPartHandlers,
@@ -20,7 +19,6 @@ namespace CellsSharp.Workbooks.Internal
 
 		private IStringTable StringTable { get; }
 
-		/// <inheritdoc />
 		protected override bool PartHasData => StringTable.EntryCount > 0;
 	}
 }

@@ -58,7 +58,6 @@ namespace CellsSharp.Documents.Internal
 
 		private bool disposed;
 
-		/// <inheritdoc />
 		protected override void CheckDisposed()
 		{
 			if (this.disposed)

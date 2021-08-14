@@ -48,22 +48,16 @@ namespace CellsSharp.Cells
 
 		#region ICellReference
 
-		/// <inheritdoc />
 		public bool IsEmpty => Start.IsEmpty || End.IsEmpty;
 
-		/// <inheritdoc />
 		public bool IsValid => Start.IsValid && End.IsValid;
 
-		/// <inheritdoc />
 		public bool IsSingleCell => Start == End;
 
-		/// <inheritdoc />
 		public CellAddress TopLeft => Start;
 
-		/// <inheritdoc />
 		public bool Contains(CellAddress cellAddress) => cellAddress >= Start && cellAddress <= End;
 
-		/// <inheritdoc />
 		public bool IntersectsWith(ICellReference cellReference) => cellReference switch {
 			CellAddress address     => Contains(address),
 			CellRange range         => IntersectsWith(range),
@@ -71,7 +65,6 @@ namespace CellsSharp.Cells
 			_                       => false,
 		};
 
-		/// <inheritdoc />
 		public bool FullyContains(ICellReference cellReference) => cellReference switch {
 			CellAddress address => Contains(address),
 			CellRange range     => FullyContains(range),
@@ -90,17 +83,14 @@ namespace CellsSharp.Cells
 				yield return new CellAddress(row, column);
 		}
 
-		/// <inheritdoc />
 		public IEnumerator<CellAddress> GetEnumerator() => EnumerateAddresses().GetEnumerator();
 
-		/// <inheritdoc />
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		#endregion
 
 		#region IEquatable<ICellReference>
 
-		/// <inheritdoc />
 		public bool Equals(ICellReference? other) => other switch {
 			CellAddress address => address == Start && address == End,
 			CellRange range     => Equals(range),
@@ -110,7 +100,6 @@ namespace CellsSharp.Cells
 
 		#endregion
 
-		/// <inheritdoc />
 		public override string ToString()
 			=> IsValid
 				   ? IsSingleCell

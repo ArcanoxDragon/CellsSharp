@@ -9,7 +9,6 @@ namespace CellsSharp.Worksheets.Internal
 {
 	sealed class WorksheetPartHandler : DefaultRootPartHandler<WorksheetPart>, IWorksheetSaveLoadHandler
 	{
-		/// <inheritdoc />
 		public WorksheetPartHandler(
 			IChangeNotifier changeNotifier,
 			IList<IChildPartHandler<WorksheetPart>> childPartHandlers,
@@ -17,7 +16,6 @@ namespace CellsSharp.Worksheets.Internal
 			WorksheetPart worksheetPart
 		) : base(changeNotifier, childPartHandlers, partElementHandlers, worksheetPart) { }
 
-		/// <inheritdoc />
 		protected override OpenXmlElement CreateRootElement() => new MsWorksheet();
 	}
 }

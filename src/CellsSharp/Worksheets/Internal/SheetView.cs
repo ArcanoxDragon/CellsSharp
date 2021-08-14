@@ -19,7 +19,6 @@ namespace CellsSharp.Worksheets.Internal
 
 		#region ISheetView
 
-		/// <inheritdoc />
 		public string CellText
 		{
 			get => FromFirstCell(address => {
@@ -38,7 +37,6 @@ namespace CellsSharp.Worksheets.Internal
 			}
 		}
 
-		/// <inheritdoc />
 		public double CellValue
 		{
 			get => FromFirstCell(address => {
@@ -50,13 +48,10 @@ namespace CellsSharp.Worksheets.Internal
 			set => ForAllCells(address => SheetData.PutNumericValue(address, value));
 		}
 
-		/// <inheritdoc />
 		public void ClearValue() => ForAllCells(SheetData.ClearValue);
 
-		/// <inheritdoc />
 		public void ClearFormatting() => ForAllCells(SheetData.ClearStyleIndex);
 
-		/// <inheritdoc />
 		public void ClearAll() => ForAllCells(SheetData.ClearCell);
 
 		#endregion

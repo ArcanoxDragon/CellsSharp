@@ -10,11 +10,8 @@
 
 		#region IWorkbook
 
-		/// <inheritdoc />
-		public ISheetCollection Sheets { get; }
-
-		/// <inheritdoc />
-		public IStringTable Strings { get; }
+		public ISheetCollection Sheets  { get; }
+		public IStringTable     Strings { get; }
 
 		#endregion
 	}

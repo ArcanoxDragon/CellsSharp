@@ -11,16 +11,12 @@ namespace CellsSharp.Internal.DataHandlers
 	{
 		#region IPartElementHandler
 
-		/// <inheritdoc />
 		public virtual uint ElementOrder => 0;
 
-		/// <inheritdoc />
 		public Type HandledElementType => typeof(TElement);
 
-		/// <inheritdoc />
 		public virtual bool HandlesRootElement => false;
 
-		/// <inheritdoc />
 		public void WriteElement(OpenXmlWriter writer)
 		{
 			writer.WriteElement(CreateElement(), () => {
@@ -28,7 +24,6 @@ namespace CellsSharp.Internal.DataHandlers
 			});
 		}
 
-		/// <inheritdoc />
 		public void ReadElement(OpenXmlReader reader)
 		{
 			if (reader.ElementType != HandledElementType)

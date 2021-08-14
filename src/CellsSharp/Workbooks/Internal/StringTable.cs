@@ -24,16 +24,13 @@ namespace CellsSharp.Workbooks.Internal
 
 		private IChangeNotifier ChangeNotifier { get; }
 
-		/// <inheritdoc />
 		public string this[uint index]
 			=> TryGetValue(index, out var value)
 				   ? value
 				   : throw new IndexOutOfRangeException("The provided index does not exist in the string table");
 
-		/// <inheritdoc />
 		public uint EntryCount => (uint) this.entryTable.Count;
 
-		/// <inheritdoc />
 		public void Clear()
 		{
 			this.entryTable.Clear();
@@ -43,11 +40,9 @@ namespace CellsSharp.Workbooks.Internal
 			ChangeNotifier.NotifyOfChange<SharedStringTablePart>(this);
 		}
 
-		/// <inheritdoc />
 		public bool TryGetValue(uint index, [MaybeNullWhen(false)] out string value)
 			=> this.entryTable.TryGetValue(index, out value);
 
-		/// <inheritdoc />
 		public uint GetOrInsertValue(string value)
 		{
 			if (this.indexLookup.TryGetValue(value, out var index))
@@ -64,14 +59,11 @@ namespace CellsSharp.Workbooks.Internal
 
 		#region PartElementHandler
 
-		/// <inheritdoc />
 		public override bool HandlesRootElement => true;
 
-		/// <inheritdoc />
 		protected override SharedStringTable CreateElement()
 			=> new() { Count = EntryCount, UniqueCount = EntryCount };
 
-		/// <inheritdoc />
 		protected override void WriteElementData(OpenXmlWriter writer)
 		{
 			Text entryText = new();
@@ -87,7 +79,6 @@ namespace CellsSharp.Workbooks.Internal
 			}
 		}
 
-		/// <inheritdoc />
 		protected override void ReadElementData(OpenXmlReader reader)
 		{
 			Clear();

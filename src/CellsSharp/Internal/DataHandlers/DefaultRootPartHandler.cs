@@ -6,7 +6,6 @@ namespace CellsSharp.Internal.DataHandlers
 {
 	class DefaultRootPartHandler<TPart> : RootPartHandler<TPart> where TPart : OpenXmlPart
 	{
-		/// <inheritdoc />
 		public DefaultRootPartHandler(
 			IChangeNotifier changeNotifier,
 			IList<IChildPartHandler<TPart>> childPartHandlers,
@@ -17,7 +16,6 @@ namespace CellsSharp.Internal.DataHandlers
 			HandledPart = handledPart;
 		}
 
-		/// <inheritdoc />
 		protected override TPart HandledPart { get; }
 	}
 }

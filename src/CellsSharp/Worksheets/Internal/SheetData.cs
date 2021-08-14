@@ -25,7 +25,6 @@ namespace CellsSharp.Worksheets.Internal
 		private readonly Dictionary<CellAddress, CellValues> dataTypeMap     = new();
 		private readonly Dictionary<CellAddress, uint>       styleIndexMap   = new();
 
-		/// <inheritdoc />
 		public SheetData(IChangeNotifier changeNotifier)
 		{
 			ChangeNotifier = changeNotifier;
@@ -173,7 +172,6 @@ namespace CellsSharp.Worksheets.Internal
 
 		#region PartElementHandler
 
-		/// <inheritdoc />
 		protected override void WriteElementData(OpenXmlWriter writer)
 		{
 			var sortedOccupiedAddresses = this.cellsWithData.ToArray();
@@ -328,7 +326,6 @@ namespace CellsSharp.Worksheets.Internal
 			}
 		}
 
-		/// <inheritdoc />
 		protected override void ReadElementData(OpenXmlReader reader)
 		{
 			Clear();

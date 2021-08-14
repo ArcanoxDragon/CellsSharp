@@ -29,16 +29,12 @@ namespace CellsSharp.Cells
 
 		#region ICellReference
 
-		/// <inheritdoc />
 		public bool IsEmpty => this.ranges.Count == 0;
 
-		/// <inheritdoc />
 		public bool IsValid => true;
 
-		/// <inheritdoc />
 		public bool IsSingleCell => this.ranges.Count == 1 && this.ranges.First().IsSingleCell;
 
-		/// <inheritdoc />
 		/// <remarks>
 		/// The top-left cell will be determined by sorting the Start address of all ranges
 		/// represented by this <see cref="CellReference"/> by their distance to the top-left
@@ -53,30 +49,24 @@ namespace CellsSharp.Cells
 						 .First()
 						 .Start;
 
-		/// <inheritdoc />
 		public bool Contains(CellAddress cellAddress) => this.ranges.Any(r => r.Contains(cellAddress));
 
-		/// <inheritdoc />
 		public bool IntersectsWith(ICellReference cellReference) => this.ranges.Any(r => r.IntersectsWith(cellReference));
 
-		/// <inheritdoc />
 		public bool FullyContains(ICellReference cellReference) => this.ranges.Any(r => r.FullyContains(cellReference));
 
 		#endregion
 
 		#region IEnumerable<CellAddress>
 
-		/// <inheritdoc />
 		public IEnumerator<CellAddress> GetEnumerator() => this.ranges.Flatten().GetEnumerator();
 
-		/// <inheritdoc />
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		#endregion
 
 		#region IEquatable<ICellReference>
 
-		/// <inheritdoc />
 		public bool Equals(ICellReference? other)
 		{
 			if (ReferenceEquals(this, other))
@@ -101,13 +91,11 @@ namespace CellsSharp.Cells
 			return this.ranges.SequenceEqual(other.ranges);
 		}
 
-		/// <inheritdoc />
 		public override bool Equals(object? obj)
 		{
 			return ReferenceEquals(this, obj) || obj is ICellReference other && Equals(other);
 		}
 
-		/// <inheritdoc />
 		public override int GetHashCode()
 		{
 #if NET5_0_OR_GREATER

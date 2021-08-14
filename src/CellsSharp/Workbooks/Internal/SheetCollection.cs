@@ -33,23 +33,18 @@ namespace CellsSharp.Workbooks.Internal
 
 		#region IEnumerable<IWorksheetInfo>
 
-		/// <inheritdoc />
 		public IEnumerator<IWorksheetInfo> GetEnumerator() => this.workbookSheets.GetEnumerator();
 
-		/// <inheritdoc />
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		#endregion
 
 		#region ISheetCollection
 
-		/// <inheritdoc />
 		public IWorksheetInfo this[string name] => FindSheetBy(s => s.Name == name);
 
-		/// <inheritdoc />
 		public IWorksheetInfo this[uint index] => FindSheetBy(s => s.Index == index);
 
-		/// <inheritdoc />
 		public IWorksheet AddNew()
 		{
 			CheckDisposed();
@@ -59,7 +54,6 @@ namespace CellsSharp.Workbooks.Internal
 			return AddNew($"Sheet{sheetId}");
 		}
 
-		/// <inheritdoc />
 		public IWorksheet AddNew(string name)
 		{
 			CheckDisposed();
@@ -75,7 +69,6 @@ namespace CellsSharp.Workbooks.Internal
 			return OpenWorksheet(worksheetInfo, worksheetPart);
 		}
 
-		/// <inheritdoc />
 		public IWorksheet Open(IWorksheetInfo worksheetInfo)
 		{
 			CheckDisposed();
@@ -90,14 +83,13 @@ namespace CellsSharp.Workbooks.Internal
 			return worksheet;
 		}
 
-		/// <inheritdoc />
 		public void Remove(IWorksheetInfo worksheetInfo)
 		{
 			CheckDisposed();
 
 			if (!this.workbookSheets.Contains(worksheetInfo))
 				return;
-			
+
 			if (!WorkbookPart.TryGetPartById(worksheetInfo.RelationshipId, out var part) || part is not WorksheetPart worksheetPart)
 				throw new InvalidOperationException("A matching worksheet was not found in the workbook");
 
@@ -106,7 +98,7 @@ namespace CellsSharp.Workbooks.Internal
 				worksheetScope.Dispose();
 				this.openWorksheetScopes.Remove(worksheetInfo);
 			}
-			
+
 			this.workbookSheets.Remove(worksheetInfo);
 			WorkbookPart.DeletePart(worksheetPart);
 			ChangeNotifier.NotifyOfChange(this, WorkbookPart);
@@ -116,7 +108,6 @@ namespace CellsSharp.Workbooks.Internal
 
 		#region ISaveLoadHandler
 
-		/// <inheritdoc />
 		public void Save()
 		{
 			foreach (var worksheetScope in this.openWorksheetScopes.Values)
@@ -127,7 +118,6 @@ namespace CellsSharp.Workbooks.Internal
 			}
 		}
 
-		/// <inheritdoc />
 		public void Load()
 		{
 			// Do nothing; worksheets are loaded when they are opened
@@ -137,7 +127,6 @@ namespace CellsSharp.Workbooks.Internal
 
 		#region IPartElementHandler
 
-		/// <inheritdoc />
 		protected override void ReadElementData(OpenXmlReader reader)
 		{
 			this.workbookSheets.Clear();
@@ -149,7 +138,6 @@ namespace CellsSharp.Workbooks.Internal
 			});
 		}
 
-		/// <inheritdoc />
 		protected override void WriteElementData(OpenXmlWriter writer)
 		{
 			var nameValue = new StringValue();

@@ -22,13 +22,10 @@ namespace CellsSharp.Worksheets.Internal
 			RelationshipId = relationshipId;
 		}
 
-		/// <inheritdoc />
 		public uint Index { get; }
 
-		/// <inheritdoc />
 		public string Name { get; }
 
-		/// <inheritdoc />
 		public string RelationshipId { get; }
 
 		#region Equality
@@ -38,13 +35,11 @@ namespace CellsSharp.Worksheets.Internal
 			return RelationshipId == other.RelationshipId;
 		}
 
-		/// <inheritdoc />
 		public override bool Equals(object? obj)
 		{
 			return ReferenceEquals(this, obj) || obj is WorksheetInfo other && Equals(other);
 		}
 
-		/// <inheritdoc />
 		public override int GetHashCode()
 		{
 			return RelationshipId.GetHashCode();

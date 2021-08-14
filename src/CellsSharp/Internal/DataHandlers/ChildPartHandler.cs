@@ -22,7 +22,6 @@ namespace CellsSharp.Internal.DataHandlers
 			IList<IPartElementHandler<TChildPart>> partElementHandlers
 		) : base(changeNotifier, childPartHandlers, partElementHandlers) { }
 
-		/// <inheritdoc />
 		public void PartSaving(TParentPart parentPart)
 		{
 			var childPart = parentPart.GetPartsOfType<TChildPart>().SingleOrDefault();
@@ -40,7 +39,6 @@ namespace CellsSharp.Internal.DataHandlers
 			}
 		}
 
-		/// <inheritdoc />
 		public void PartLoading(TParentPart parentPart)
 		{
 			var childPart = parentPart.GetPartsOfType<TChildPart>().SingleOrDefault();

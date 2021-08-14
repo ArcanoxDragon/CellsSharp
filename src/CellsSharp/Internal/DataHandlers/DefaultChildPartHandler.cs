@@ -8,17 +8,14 @@ namespace CellsSharp.Internal.DataHandlers
 		where TParentPart : OpenXmlPart
 		where TChildPart : OpenXmlPart, IFixedContentTypePart
 	{
-		/// <inheritdoc />
 		public DefaultChildPartHandler(
 			IChangeNotifier changeNotifier,
 			IList<IChildPartHandler<TChildPart>> childPartHandlers,
 			IList<IPartElementHandler<TChildPart>> partElementHandlers
 		) : base(changeNotifier, childPartHandlers, partElementHandlers) { }
 
-		/// <inheritdoc />
 		protected override bool PartHasData => true;
 
-		/// <inheritdoc />
 		protected override TChildPart CreateChildPart(TParentPart parentPart)
 			=> parentPart.AddNewPart<TChildPart>();
 	}

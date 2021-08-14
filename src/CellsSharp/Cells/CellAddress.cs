@@ -45,32 +45,24 @@ namespace CellsSharp.Cells
 
 		#region ICellReference
 
-		/// <inheritdoc />
 		public bool IsEmpty => ReferenceEquals(this, None);
 
-		/// <inheritdoc />
 		public bool IsValid => Row > 0 && Column > 0;
 
-		/// <inheritdoc />
 		public bool IsSingleCell => true;
 
-		/// <inheritdoc />
 		public CellAddress TopLeft => this;
 
-		/// <inheritdoc />
 		public bool Contains(CellAddress cellAddress) => Equals(cellAddress);
 
-		/// <inheritdoc />
 		public bool IntersectsWith(ICellReference cellReference) => cellReference.Contains(this);
 
-		/// <inheritdoc />
 		public bool FullyContains(ICellReference cellReference) => Equals(cellReference);
 
 		#endregion
 
 		#region IComparable<CellAddress>
 
-		/// <inheritdoc />
 		public int CompareTo(CellAddress? other)
 		{
 			if (ReferenceEquals(this, other))
@@ -86,7 +78,6 @@ namespace CellsSharp.Cells
 			return Column.CompareTo(other.Column);
 		}
 
-		/// <inheritdoc />
 		public int CompareTo(object? obj)
 		{
 			if (ReferenceEquals(this, obj))
@@ -103,17 +94,14 @@ namespace CellsSharp.Cells
 
 		#region IEnumerable<CellAddress>
 
-		/// <inheritdoc />
 		public IEnumerator<CellAddress> GetEnumerator() => Enumerable.Repeat(this, 1).GetEnumerator();
 
-		/// <inheritdoc />
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		#endregion
 
 		#region IEquatable<ICellReference>
 
-		/// <inheritdoc />
 		public bool Equals(ICellReference? other)
 		{
 			if (ReferenceEquals(null, other))
@@ -126,7 +114,6 @@ namespace CellsSharp.Cells
 
 		#endregion
 
-		/// <inheritdoc />
 		public override string ToString() => ToString(AddressType.Relative);
 
 		public string ToString(AddressType addressType)
