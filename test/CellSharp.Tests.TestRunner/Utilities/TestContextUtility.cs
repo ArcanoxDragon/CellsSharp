@@ -2,7 +2,7 @@
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 
-namespace CellSharp.Tests.TestRunner
+namespace CellSharp.Tests.TestRunner.Utilities
 {
 	static class TestContextUtility
 	{

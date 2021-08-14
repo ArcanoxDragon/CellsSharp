@@ -1,7 +1,7 @@
 ﻿using CellsSharp.Cells;
 using NUnit.Framework;
 
-namespace CellsSharp.Tests
+namespace CellsSharp.Tests.CellReferences
 {
 	[TestFixture]
 	public class CellReferenceParsingTests
@@ -18,7 +18,7 @@ namespace CellsSharp.Tests
 		public void TestSingleCellInvalid(string invalidAddress)
 		{
 			Assert.False(CellAddress.TryParse(invalidAddress, out var cellAddress));
-			Assert.AreSame(cellAddress, CellAddress.None);
+			Assert.AreEqual(cellAddress, CellAddress.None);
 		}
 
 		[TestCase("A1", 1u, 1u)]

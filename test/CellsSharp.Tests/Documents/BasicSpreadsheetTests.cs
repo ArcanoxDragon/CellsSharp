@@ -3,7 +3,7 @@ using System.IO.Packaging;
 using CellsSharp.Cells;
 using NUnit.Framework;
 
-namespace CellsSharp.Tests
+namespace CellsSharp.Tests.Documents
 {
 	[TestFixture]
 	public class BasicSpreadsheetTests

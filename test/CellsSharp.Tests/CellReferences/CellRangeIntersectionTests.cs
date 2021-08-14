@@ -1,7 +1,7 @@
 ﻿using CellsSharp.Cells;
 using NUnit.Framework;
 
-namespace CellsSharp.Tests
+namespace CellsSharp.Tests.CellReferences
 {
 	[TestFixture]
 	public class CellRangeIntersectionTests

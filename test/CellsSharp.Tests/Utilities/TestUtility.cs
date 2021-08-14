@@ -4,7 +4,7 @@ using Humanizer;
 using JetBrains.Annotations;
 using NUnit.Framework;
 
-namespace CellsSharp.Tests
+namespace CellsSharp.Tests.Utilities
 {
 	sealed class MeasurementUnit
 	{
