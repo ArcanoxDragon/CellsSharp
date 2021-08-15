@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using CellsSharp.Cells.Internal;
-using CellsSharp.Extensions;
 using JetBrains.Annotations;
 
 namespace CellsSharp.Cells
@@ -108,7 +107,7 @@ namespace CellsSharp.Cells
 
 		#region IEnumerable<CellAddress>
 
-		public IEnumerator<CellAddress> GetEnumerator() => this.ranges.Flatten().GetEnumerator();
+		public IEnumerator<CellAddress> GetEnumerator() => this.ranges.SelectMany(range => range).GetEnumerator();
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 

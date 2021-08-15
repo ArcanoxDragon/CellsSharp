@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Packaging;
 using CellsSharp.Cells;
 using CellsSharp.Tests.Utilities;
 using CellsSharp.Worksheets;
@@ -40,8 +38,7 @@ namespace CellsSharp.Tests.Documents
 
 			var measureCreateDocument = TestUtility.Measure("Creating document");
 
-			using var package = Package.Open(HugeDocumentFilename, FileMode.Create, FileAccess.ReadWrite);
-			using var document = SpreadsheetDocument.Create(package);
+			using var document = SpreadsheetDocument.Create(HugeDocumentFilename);
 
 			PauseTimerWhile(() => {
 				measureCreateDocument.Finish();
@@ -131,6 +128,24 @@ namespace CellsSharp.Tests.Documents
 				FillSheet(address => {
 					testSheet[address].CellText = $"Cell {address}";
 				});
+			});
+
+		[Test, Explicit]
+		public void CreateHugeDocument_AllSameText_OneAtATime()
+			=> CreateDocument(testSheet => {
+				TestContext.Progress.WriteLine();
+
+				FillSheet(address => {
+					testSheet[address].CellText = "Cell Text";
+				});
+			});
+
+		[Test, Explicit]
+		public void CreateHugeDocument_AllSameText_AllAtOnce()
+			=> CreateDocument(testSheet => {
+				TestContext.Progress.WriteLine();
+
+				testSheet[1, 1, HugeDocumentHeight, HugeDocumentWidth].CellText = "Cell Text";
 			});
 	}
 }

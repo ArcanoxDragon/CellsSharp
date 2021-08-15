@@ -8,9 +8,12 @@ using JetBrains.Annotations;
 namespace CellsSharp.Cells
 {
 	[PublicAPI]
-	public sealed record CellRange : ICellReference, IEnumerable<CellAddress>
+	public readonly struct CellRange : ICellReference, IEnumerable<CellAddress>
 	{
 		public static readonly CellRange Empty = new(CellAddress.None, CellAddress.None);
+
+		public CellRange(uint startRow, uint startColumn, uint endRow, uint endColumn)
+			: this(new CellAddress(startRow, startColumn), new CellAddress(endRow, endColumn)) { }
 
 		public CellRange(CellAddress start, CellAddress end)
 		{
@@ -104,6 +107,28 @@ namespace CellsSharp.Cells
 
 		#endregion
 
+		#region Equality
+
+		public bool Equals(CellRange other)
+			=> Start.Equals(other.Start) && End.Equals(other.End);
+
+		public override bool Equals(object? obj)
+			=> obj is CellRange other && Equals(other);
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return ( Start.GetHashCode() * 397 ) ^ End.GetHashCode();
+			}
+		}
+
+		public static bool operator ==(CellRange left, CellRange right) => left.Equals(right);
+
+		public static bool operator !=(CellRange left, CellRange right) => !left.Equals(right);
+
+		#endregion
+
 		#region Parsing/Conversion
 
 		public override string ToString()
@@ -117,6 +142,9 @@ namespace CellsSharp.Cells
 
 		public static implicit operator CellRange((CellAddress Start, CellAddress End) addressPair)
 			=> new(addressPair.Start, addressPair.End);
+
+		public static explicit operator CellRange(string cellRangeStr)
+			=> TryParse(cellRangeStr, out var cellRange) ? cellRange : Empty;
 
 		public static bool TryParse(string cellRangeText, out CellRange cellRange)
 			=> CellReferenceParser.TryParseCellRange(cellRangeText, out cellRange);

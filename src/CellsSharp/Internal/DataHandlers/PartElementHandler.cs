@@ -17,8 +17,13 @@ namespace CellsSharp.Internal.DataHandlers
 
 		public virtual bool HandlesRootElement => false;
 
+		public abstract bool PartHasData { get; }
+
 		public void WriteElement(OpenXmlWriter writer)
 		{
+			if (!PartHasData)
+				return;
+
 			writer.WriteElement(CreateElement(), () => {
 				WriteElementData(writer);
 			});

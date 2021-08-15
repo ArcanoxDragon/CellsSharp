@@ -14,30 +14,44 @@ namespace CellsSharp.Worksheets.Internal
 {
 	sealed class SheetData : PartElementHandler<WorksheetPart, MsSheetData>
 	{
-		private readonly SortedList<uint, double> rowHeightMap = new();
+		#region Fields
 
 		// It's way more memory efficient to store potential cell metadata as primitive types in separate dictionaries.
 		// If we boxed stuff like "uint" or "double" into "object", a 4-byte number becomes a 24-byte reference type
 
-		private readonly HashSet<CellAddress> cellsWithData = new();
-
-		private readonly SortedList<CellAddress, uint>       stringIndexMap  = new();
-		private readonly SortedList<CellAddress, double>     numericValueMap = new();
+		private readonly HashSet<CellAddress>                cellsWithData   = new();
 		private readonly SortedList<CellAddress, CellValues> dataTypeMap     = new();
-		private readonly SortedList<CellAddress, uint>       styleIndexMap   = new();
+		private readonly SortedList<CellAddress, double>     numericValueMap = new();
+		private readonly SortedList<uint, double>            rowHeightMap    = new();
+
+		private readonly SortedList<CellAddress, uint> stringIndexMap = new();
+		private readonly SortedList<CellAddress, uint> styleIndexMap  = new();
+		private          uint                          maxKnownRow, maxKnownColumn;
 
 		private uint minKnownRow, minKnownColumn;
-		private uint maxKnownRow, maxKnownColumn;
+
+		#endregion
+
+		#region Constructors
 
 		public SheetData(IChangeNotifier changeNotifier)
 		{
 			ChangeNotifier = changeNotifier;
 		}
 
-		public CellAddress MinKnownAddress => new(this.minKnownRow, this.minKnownColumn);
+		#endregion
+
+		#region Properties
+
 		public CellAddress MaxKnownAddress => new(this.maxKnownRow, this.maxKnownColumn);
 
+		public CellAddress MinKnownAddress => new(this.minKnownRow, this.minKnownColumn);
+
 		private IChangeNotifier ChangeNotifier { get; }
+
+		#endregion
+
+		#region Public Methods
 
 		public void ClearCell(CellAddress address)
 		{
@@ -49,8 +63,6 @@ namespace CellsSharp.Worksheets.Internal
 			UpdateOccupied(address, false);
 			MarkDirty();
 		}
-
-		#region Row Height
 
 		public bool TryGetRowHeight(uint rowIndex, out double rowHeight)
 			=> this.rowHeightMap.TryGetValue(rowIndex, out rowHeight);
@@ -68,10 +80,6 @@ namespace CellsSharp.Worksheets.Internal
 
 			MarkDirty();
 		}
-
-		#endregion
-
-		#region Value
 
 		// TODO: Other data types
 
@@ -112,10 +120,6 @@ namespace CellsSharp.Worksheets.Internal
 			MarkDirty();
 		}
 
-		#endregion
-
-		#region Style Index
-
 		public uint GetStyleIndex(CellAddress address)
 		{
 			if (!this.styleIndexMap.TryGetValue(address, out var styleIndex))
@@ -146,54 +150,9 @@ namespace CellsSharp.Worksheets.Internal
 
 		#endregion
 
-		#region Private Methods
+		#region PartElementHandler<WorksheetPart,SheetData>
 
-		private void MarkDirty() => ChangeNotifier.NotifyOfChange<WorksheetPart>(this);
-
-		private void UpdateKnownBounds(CellAddress address)
-		{
-			if (this.minKnownRow == 0 || address.Row < this.minKnownRow)
-				this.minKnownRow = address.Row;
-			if (this.minKnownColumn == 0 || address.Column < this.minKnownColumn)
-				this.minKnownColumn = address.Column;
-			if (address.Row > this.maxKnownRow)
-				this.maxKnownRow = address.Row;
-			if (address.Column > this.maxKnownColumn)
-				this.maxKnownColumn = address.Column;
-		}
-
-		private void UpdateOccupied(CellAddress address, bool occupied)
-		{
-			if (occupied)
-				this.cellsWithData.Add(address);
-			else
-				this.cellsWithData.Remove(address);
-		}
-
-		private void CheckOccupied(CellAddress address)
-		{
-			var occupied = this.stringIndexMap.ContainsKey(address) ||
-						   this.numericValueMap.ContainsKey(address) ||
-						   this.dataTypeMap.ContainsKey(address) ||
-						   this.styleIndexMap.ContainsKey(address);
-
-			UpdateOccupied(address, occupied);
-		}
-
-		private void Clear()
-		{
-			this.cellsWithData.Clear();
-			this.stringIndexMap.Clear();
-			this.numericValueMap.Clear();
-			this.dataTypeMap.Clear();
-			this.styleIndexMap.Clear();
-
-			MarkDirty();
-		}
-
-		#endregion
-
-		#region PartElementHandler
+		public override bool PartHasData => this.cellsWithData.Any();
 
 		protected override void WriteElementData(OpenXmlWriter writer)
 		{
@@ -300,7 +259,7 @@ namespace CellsSharp.Worksheets.Internal
 
 			// Iterate through all addresses inside the maximum bounds we know of
 			// and skip any addresses that we've marked as not containing data
-			foreach (var address in (MinKnownAddress, MaxKnownAddress))
+			foreach (var address in ( MinKnownAddress, MaxKnownAddress ))
 			{
 				if (!this.cellsWithData.Contains(address))
 					continue;
@@ -406,6 +365,53 @@ namespace CellsSharp.Worksheets.Internal
 						SetStyleIndex(address, styleIndex);
 				});
 			});
+		}
+
+		#endregion
+
+		#region Private Methods
+
+		private void MarkDirty() => ChangeNotifier.NotifyOfChange<WorksheetPart>(this);
+
+		private void UpdateKnownBounds(CellAddress address)
+		{
+			if (this.minKnownRow == 0 || address.Row < this.minKnownRow)
+				this.minKnownRow = address.Row;
+			if (this.minKnownColumn == 0 || address.Column < this.minKnownColumn)
+				this.minKnownColumn = address.Column;
+			if (address.Row > this.maxKnownRow)
+				this.maxKnownRow = address.Row;
+			if (address.Column > this.maxKnownColumn)
+				this.maxKnownColumn = address.Column;
+		}
+
+		private void UpdateOccupied(CellAddress address, bool occupied)
+		{
+			if (occupied)
+				this.cellsWithData.Add(address);
+			else
+				this.cellsWithData.Remove(address);
+		}
+
+		private void CheckOccupied(CellAddress address)
+		{
+			var occupied = this.stringIndexMap.ContainsKey(address) ||
+						   this.numericValueMap.ContainsKey(address) ||
+						   this.dataTypeMap.ContainsKey(address) ||
+						   this.styleIndexMap.ContainsKey(address);
+
+			UpdateOccupied(address, occupied);
+		}
+
+		private void Clear()
+		{
+			this.cellsWithData.Clear();
+			this.stringIndexMap.Clear();
+			this.numericValueMap.Clear();
+			this.dataTypeMap.Clear();
+			this.styleIndexMap.Clear();
+
+			MarkDirty();
 		}
 
 		#endregion

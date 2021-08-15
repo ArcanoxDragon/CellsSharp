@@ -9,7 +9,7 @@ namespace CellsSharp.Tests.TestRunner
 		{
 			TestContextUtility.HookTestContextOutput();
 
-			TestRunnerProgram.RunHugeSpreadsheetTests();
+			RunHugeSpreadsheetTests();
 		}
 
 		private static void RunHugeSpreadsheetTests()

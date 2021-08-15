@@ -61,6 +61,8 @@ namespace CellsSharp.Workbooks.Internal
 
 		public override bool HandlesRootElement => true;
 
+		public override bool PartHasData => EntryCount > 0;
+
 		protected override SharedStringTable CreateElement()
 			=> new() { Count = EntryCount, UniqueCount = EntryCount };
 

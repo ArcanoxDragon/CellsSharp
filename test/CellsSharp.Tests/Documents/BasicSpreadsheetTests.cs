@@ -1,20 +1,15 @@
-﻿using System.IO;
-using System.IO.Packaging;
-using CellsSharp.Cells;
+﻿using CellsSharp.Cells;
 using NUnit.Framework;
 
 namespace CellsSharp.Tests.Documents
 {
 	[TestFixture]
-	public class BasicSpreadsheetTests
+	public class BasicSpreadsheetTests : SpreadsheetDocumentTestFixture
 	{
-		private const string TestDocumentFilename = "TestDocument.xlsx";
-
 		[Test, Order(1)]
 		public void CreateSimpleSpreadsheet()
 		{
-			using var package = Package.Open(TestDocumentFilename, FileMode.Create, FileAccess.ReadWrite);
-			using var document = SpreadsheetDocument.Create(package);
+			using var document = CreateDocument();
 			var testSheet = document.Workbook.Sheets.AddNew("Test Sheet");
 
 			testSheet["A1:D4"].CellText = "Fill Test";
@@ -23,10 +18,9 @@ namespace CellsSharp.Tests.Documents
 		}
 
 		[Test, Order(2)]
-		public void OpenSimpleSpreadsheet()
+		public void ValidateSimpleSpreadsheet()
 		{
-			using var package = Package.Open(TestDocumentFilename, FileMode.Open, FileAccess.Read);
-			using var document = SpreadsheetDocument.Open(package);
+			using var document = OpenDocument();
 			var testSheetInfo = document.Workbook.Sheets["Test Sheet"];
 			var testSheet = document.Workbook.Sheets.Open(testSheetInfo);
 

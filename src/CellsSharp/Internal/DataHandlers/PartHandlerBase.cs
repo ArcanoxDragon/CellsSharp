@@ -6,6 +6,13 @@ using CellsSharp.Internal.ChangeTracking;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 
+#if XML_INDENTED_FORMATTING
+using System.IO;
+using System.Reflection;
+using System.Text;
+using System.Xml;
+#endif
+
 namespace CellsSharp.Internal.DataHandlers
 {
 	abstract class PartHandlerBase<TPart> where TPart : OpenXmlPart
@@ -43,7 +50,33 @@ namespace CellsSharp.Internal.DataHandlers
 				if (this.partElementHandlers.Count(h => h.HandlesRootElement) > 1)
 					throw new InvalidOperationException($"More than one root element handler found for part \"{typeof(TPart).Name}\"");
 
+#if XML_INDENTED_FORMATTING
+				using var stream = part.GetStream(FileMode.Create);
+				using var writer = OpenXmlWriter.Create(stream);
+
+				// Try and overwrite the writer field to enable indent formatting
+				var xmlWriterField = typeof(OpenXmlPartWriter).GetField("_xmlWriter", BindingFlags.Instance | BindingFlags.NonPublic);
+
+				if (xmlWriterField is not null)
+				{
+					if (xmlWriterField.GetValue(writer) is XmlWriter oldWriter)
+					{
+						oldWriter.Close();
+						oldWriter.Dispose();
+					}
+
+					XmlWriterSettings writerSettings = new() {
+						CloseOutput = false,
+						Encoding = Encoding.UTF8,
+						Indent = true,
+					};
+					XmlWriter xmlWriter = XmlWriter.Create(stream, writerSettings);
+
+					xmlWriterField.SetValue(writer, xmlWriter);
+				}
+#else
 				using var writer = OpenXmlWriter.Create(part);
+#endif
 
 				writer.WriteStartDocument();
 

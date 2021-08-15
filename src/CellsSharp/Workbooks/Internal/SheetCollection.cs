@@ -127,6 +127,8 @@ namespace CellsSharp.Workbooks.Internal
 
 		#region IPartElementHandler
 
+		public override bool PartHasData => this.workbookSheets.Any();
+
 		protected override void ReadElementData(OpenXmlReader reader)
 		{
 			this.workbookSheets.Clear();

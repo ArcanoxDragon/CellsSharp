@@ -159,6 +159,9 @@ namespace CellsSharp.Cells
 			rowIndex = Row;
 			columnIndex = Column;
 		}
+		
+		public static explicit operator CellAddress(string cellAddressStr)
+			=> TryParse(cellAddressStr, out var cellAddress) ? cellAddress : None;
 
 		public static bool TryParse(string cellAddressText, out CellAddress cellAddress)
 			=> CellReferenceParser.TryParseCellAddress(cellAddressText, out cellAddress);

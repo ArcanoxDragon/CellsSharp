@@ -10,6 +10,9 @@ using CellsSharp.Worksheets;
 using CellsSharp.Worksheets.Internal;
 using DocumentFormat.OpenXml.Packaging;
 using MsSpreadsheetDocument = DocumentFormat.OpenXml.Packaging.SpreadsheetDocument;
+using SheetData = CellsSharp.Worksheets.Internal.SheetData;
+using Workbook = CellsSharp.Workbooks.Internal.Workbook;
+using Worksheet = CellsSharp.Worksheets.Internal.Worksheet;
 
 namespace CellsSharp.IoC
 {
@@ -59,6 +62,9 @@ namespace CellsSharp.IoC
 				RegisterDocumentServices(builder);
 			});
 
+		/// <summary>
+		/// Registers all services that exist within the scope of a single document
+		/// </summary>
 		private static void RegisterDocumentServices(ContainerBuilder builder)
 		{
 			builder.Register(c => {
@@ -87,6 +93,9 @@ namespace CellsSharp.IoC
 				RegisterWorksheetServices(builder);
 			});
 
+		/// <summary>
+		/// Registers all services that exist within the scope of a single worksheet
+		/// </summary>
 		private static void RegisterWorksheetServices(ContainerBuilder builder)
 		{
 			builder.RegisterType<Worksheet>().As<IWorksheet>().As<IWorksheetImpl>().InstancePerWorksheet();
@@ -95,6 +104,7 @@ namespace CellsSharp.IoC
 			// Worksheet parts
 			builder.RegisterType<WorksheetPartHandler>().As<IWorksheetSaveLoadHandler>().InstancePerWorksheet();
 			builder.RegisterPartElementHandler<WorksheetPart, SheetData>().AsSelf().InstancePerWorksheet();
+			builder.RegisterPartElementHandler<WorksheetPart, MergedCellsCollection>().AsSelf().InstancePerWorksheet();
 		}
 	}
 }
