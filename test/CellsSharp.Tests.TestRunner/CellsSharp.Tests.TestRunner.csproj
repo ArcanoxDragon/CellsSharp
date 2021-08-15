@@ -4,7 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<Configurations>Debug_net472;Debug_net50;Release_net472;Release_net50</Configurations>
 		<Nullable>enable</Nullable>
-		<StartupObject>CellSharp.Tests.TestRunner.TestRunnerProgram</StartupObject>
+		<StartupObject>CellsSharp.Tests.TestRunner.TestRunnerProgram</StartupObject>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" $(Configuration.Contains('net472')) ">

@@ -1,7 +1,7 @@
-﻿using CellSharp.Tests.TestRunner.Utilities;
-using CellsSharp.Tests.Documents;
+﻿using CellsSharp.Tests.Documents;
+using CellsSharp.Tests.TestRunner.Utilities;
 
-namespace CellSharp.Tests.TestRunner
+namespace CellsSharp.Tests.TestRunner
 {
 	class TestRunnerProgram
 	{
@@ -9,7 +9,7 @@ namespace CellSharp.Tests.TestRunner
 		{
 			TestContextUtility.HookTestContextOutput();
 
-			RunHugeSpreadsheetTests();
+			TestRunnerProgram.RunHugeSpreadsheetTests();
 		}
 
 		private static void RunHugeSpreadsheetTests()

@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework.Interfaces;
 
-namespace CellSharp.Tests.TestRunner
+namespace CellsSharp.Tests.TestRunner
 {
 	public class ConsoleOutputTestListener : ITestListener
 	{
