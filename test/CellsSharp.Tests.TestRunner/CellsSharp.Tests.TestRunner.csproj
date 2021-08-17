@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<Configurations>Debug_net472;Debug_net50;Release_net472;Release_net50</Configurations>
+		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<StartupObject>CellsSharp.Tests.TestRunner.TestRunnerProgram</StartupObject>
 		<DefineConstants>XML_INDENTED_FORMATTING</DefineConstants>

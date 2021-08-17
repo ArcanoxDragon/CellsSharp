@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<Configurations>Debug_net472;Debug_net50;Release_net472;Release_net50</Configurations>
+		<LangVersion>latest</LangVersion>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
